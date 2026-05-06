@@ -1,5 +1,5 @@
 {
-  "name": "wdk-quickstart",
+  "name": "stride-wallet",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -18,6 +18,7 @@
     "@tetherto/wdk-wallet-evm": "^1.0.0-beta.12",
     "@tetherto/wdk-wallet-evm-erc-4337": "^1.0.0-beta.6",
     "@tetherto/wdk-wallet-tron": "^1.0.0-beta.4",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "qrcode": "^1.5.4"
   }
 }
