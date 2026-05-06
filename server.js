@@ -1,6 +1,7 @@
 import express from 'express'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import QRCode from 'qrcode'
 import WDK from '@tetherto/wdk'
 import WalletManagerEvm from '@tetherto/wdk-wallet-evm'
 import WalletManagerEvmErc4337 from '@tetherto/wdk-wallet-evm-erc-4337'
@@ -128,6 +129,48 @@ app.get('/api/balances', async (req, res) => {
     }
 
     res.json({ balances, tokens })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Native coin decimals per chain (for amount → base unit conversion)
+const NATIVE_DECIMALS = { ethereum: 18, sepolia: 18, tron: 6, bitcoin: 8 }
+
+function toBaseUnits(humanAmount, decimals) {
+  const [whole = '0', frac = ''] = String(humanAmount).split('.')
+  const fracPadded = frac.padEnd(decimals, '0').slice(0, decimals)
+  return BigInt(whole.replace(/^0+/, '') || '0' + fracPadded)
+}
+
+app.get('/api/qr', async (req, res) => {
+  const { address } = req.query
+  if (!address) return res.status(400).json({ error: 'address query param required' })
+  const svg = await QRCode.toString(address, { type: 'svg', errorCorrectionLevel: 'M', margin: 2 })
+  res.type('image/svg+xml').send(svg)
+})
+
+app.post('/api/send', async (req, res) => {
+  if (!walletState) return res.status(400).json({ error: 'No wallet loaded' })
+  const { chain, to, amount, tokenAddress } = req.body
+  if (!chain || !to || !amount) return res.status(400).json({ error: 'chain, to, and amount are required' })
+
+  const account = walletState.accounts[chain]
+  if (!account) return res.status(400).json({ error: `Unknown chain: ${chain}` })
+
+  try {
+    if (tokenAddress) {
+      const token = CHAIN_TOKENS[chain]?.find(t => t.address.toLowerCase() === tokenAddress.toLowerCase())
+      const decimals = token?.decimals ?? 18
+      const amountRaw = toBaseUnits(amount, decimals)
+      const result = await account.transfer({ token: tokenAddress, recipient: to, amount: amountRaw })
+      res.json({ hash: result.hash })
+    } else {
+      const decimals = NATIVE_DECIMALS[chain] ?? 18
+      const amountRaw = toBaseUnits(amount, decimals)
+      const result = await account.sendTransaction({ to, value: amountRaw })
+      res.json({ hash: result.hash })
+    }
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
