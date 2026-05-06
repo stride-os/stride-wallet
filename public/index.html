@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STRIDE Wallet</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #1D1F5A;
+      --pink: #FF1493;
+      --blue: #2196F3;
+      --bg: #0d0f24;
+      --surface: #161830;
+      --surface2: #1e2040;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8eaf6;
+      --muted: #7986cb;
+      --radius: 16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .logo-wrap { display: flex; align-items: center; gap: 12px; }
+    .logo-wrap svg { height: 40px; width: auto; }
+    .logo-tag {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 3px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+
+    #disconnect-btn {
+      display: none;
+      background: transparent;
+      border: 1px solid rgba(255,20,147,0.4);
+      color: var(--pink);
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    #disconnect-btn:hover { background: rgba(255,20,147,0.1); }
+
+    /* ── Main ── */
+    main { max-width: 680px; margin: 0 auto; padding: 48px 24px; }
+
+    /* ── Welcome screen ── */
+    #welcome {
+      text-align: center;
+    }
+    #welcome h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, var(--pink), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    #welcome p {
+      color: var(--muted);
+      margin-bottom: 40px;
+      font-size: 15px;
+    }
+
+    .btn-group { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 0 auto; }
+
+    .btn-primary {
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: none;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--pink), var(--blue));
+      color: white;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-secondary {
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--surface2);
+      color: var(--text);
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: #252850; }
+
+    /* ── Import panel ── */
+    #import-panel {
+      display: none;
+      margin-top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: left;
+    }
+    #import-panel label { font-size: 13px; color: var(--muted); display: block; margin-bottom: 8px; }
+    #import-panel textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 12px;
+      resize: vertical;
+      min-height: 80px;
+      font-family: 'Courier New', monospace;
+      line-height: 1.6;
+      outline: none;
+    }
+    #import-panel textarea:focus { border-color: var(--blue); }
+    .import-actions { display: flex; gap: 10px; margin-top: 14px; }
+    .import-actions button { flex: 1; }
+
+    /* ── Seed phrase reveal ── */
+    #seed-reveal {
+      display: none;
+      background: var(--surface);
+      border: 1px solid rgba(255,20,147,0.3);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 28px;
+    }
+    #seed-reveal h3 { font-size: 15px; color: var(--pink); margin-bottom: 6px; }
+    #seed-reveal p { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .seed-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .seed-word {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .seed-word span:first-child { color: var(--muted); font-size: 11px; min-width: 16px; }
+    .seed-word span:last-child { font-size: 13px; font-weight: 500; }
+    .copy-seed-btn {
+      width: 100%;
+      padding: 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .copy-seed-btn:hover { color: var(--text); border-color: var(--blue); }
+
+    /* ── Dashboard ── */
+    #dashboard { display: none; }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .chain-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px;
+      margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .chain-card:hover { border-color: rgba(255,255,255,0.15); }
+
+    .chain-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .chain-icon {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .icon-eth    { background: linear-gradient(135deg,#627eea,#8fa4f3); }
+    .icon-sep    { background: linear-gradient(135deg,#a259f7,#c084fc); }
+    .icon-trx    { background: linear-gradient(135deg,#ef0027,#ff6b6b); }
+    .icon-btc    { background: linear-gradient(135deg,#f7931a,#ffb347); }
+
+    .testnet-badge {
+      display: inline-block;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(162,89,247,0.15);
+      color: #c084fc;
+      border: 1px solid rgba(162,89,247,0.3);
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .chain-name { font-size: 15px; font-weight: 600; }
+    .chain-ticker { font-size: 12px; color: var(--muted); }
+
+    .chain-balance {
+      font-size: 22px;
+      font-weight: 700;
+      margin-left: auto;
+      text-align: right;
+    }
+    .chain-balance-units { font-size: 12px; color: var(--muted); }
+
+    .token-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .token-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+    }
+    .token-symbol { font-weight: 600; color: var(--text); }
+    .token-balance { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+    .address-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .address-text {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      flex: 1;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: color 0.2s;
+      flex-shrink: 0;
+    }
+    .copy-btn:hover { color: var(--text); }
+
+    /* ── Refresh button ── */
+    .refresh-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 16px;
+    }
+    .refresh-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .refresh-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+    .refresh-btn.loading { opacity: 0.5; pointer-events: none; }
+    .spin { display: inline-block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status / error ── */
+    #status {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+    #status.error { background: rgba(255,50,50,0.1); border: 1px solid rgba(255,50,50,0.3); color: #ff6b6b; }
+    #status.info  { background: rgba(33,150,243,0.1); border: 1px solid rgba(33,150,243,0.3); color: #64b5f6; }
+
+    /* ── Loading overlay ── */
+    #loader {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(13,15,36,0.8);
+      backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+      z-index: 100;
+    }
+    #loader.active { display: flex; }
+    .loader-ring {
+      width: 48px; height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--pink);
+      border-right-color: var(--blue);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    #loader p { color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loader">
+  <div class="loader-ring"></div>
+  <p id="loader-msg">Setting up wallet…</p>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="logo-wrap">
+    <!-- STRIDE logo (white, for dark background) -->
+    <svg width="273" height="121" viewBox="0 0 273 121" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M41.75 58.0938C41.75 57.2812 41.625 56.5521 41.375 55.9062C41.1458 55.2396 40.7083 54.6354 40.0625 54.0938C39.4167 53.5312 38.5104 52.9792 37.3438 52.4375C36.1771 51.8958 34.6667 51.3333 32.8125 50.75C30.75 50.0833 28.7917 49.3333 26.9375 48.5C25.1042 47.6667 23.4792 46.6979 22.0625 45.5938C20.6667 44.4688 19.5625 43.1667 18.75 41.6875C17.9583 40.2083 17.5625 38.4896 17.5625 36.5312C17.5625 34.6354 17.9792 32.9167 18.8125 31.375C19.6458 29.8125 20.8125 28.4792 22.3125 27.375C23.8125 26.25 25.5833 25.3854 27.625 24.7812C29.6875 24.1771 31.9479 23.875 34.4062 23.875C37.7604 23.875 40.6875 24.4792 43.1875 25.6875C45.6875 26.8958 47.625 28.5521 49 30.6562C50.3958 32.7604 51.0938 35.1667 51.0938 37.875H41.7812C41.7812 36.5417 41.5 35.375 40.9375 34.375C40.3958 33.3542 39.5625 32.5521 38.4375 31.9688C37.3333 31.3854 35.9375 31.0938 34.25 31.0938C32.625 31.0938 31.2708 31.3438 30.1875 31.8438C29.1042 32.3229 28.2917 32.9792 27.75 33.8125C27.2083 34.625 26.9375 35.5417 26.9375 36.5625C26.9375 37.3333 27.125 38.0312 27.5 38.6562C27.8958 39.2812 28.4792 39.8646 29.25 40.4062C30.0208 40.9479 30.9688 41.4583 32.0938 41.9375C33.2188 42.4167 34.5208 42.8854 36 43.3438C38.4792 44.0938 40.6562 44.9375 42.5312 45.875C44.4271 46.8125 46.0104 47.8646 47.2812 49.0312C48.5521 50.1979 49.5104 51.5208 50.1562 53C50.8021 54.4792 51.125 56.1562 51.125 58.0312C51.125 60.0104 50.7396 61.7812 49.9688 63.3438C49.1979 64.9062 48.0833 66.2292 46.625 67.3125C45.1667 68.3958 43.4271 69.2188 41.4062 69.7812C39.3854 70.3438 37.125 70.625 34.625 70.625C32.375 70.625 30.1562 70.3333 27.9688 69.75C25.7812 69.1458 23.7917 68.2396 22 67.0312C20.2292 65.8229 18.8125 64.2812 17.75 62.4062C16.6875 60.5312 16.1562 58.3125 16.1562 55.75H25.5625C25.5625 57.1667 25.7812 58.3646 26.2188 59.3438C26.6562 60.3229 27.2708 61.1146 28.0625 61.7188C28.875 62.3229 29.8333 62.7604 30.9375 63.0312C32.0625 63.3021 33.2917 63.4375 34.625 63.4375C36.25 63.4375 37.5833 63.2083 38.625 62.75C39.6875 62.2917 40.4688 61.6562 40.9688 60.8438C41.4896 60.0312 41.75 59.1146 41.75 58.0938ZM77.8438 24.5V70H68.5V24.5H77.8438ZM91.8438 24.5V31.8438H54.7188V24.5H91.8438ZM97.1875 24.5H114.156C117.635 24.5 120.625 25.0208 123.125 26.0625C125.646 27.1042 127.583 28.6458 128.938 30.6875C130.292 32.7292 130.969 35.2396 130.969 38.2188C130.969 40.6562 130.552 42.75 129.719 44.5C128.906 46.2292 127.75 47.6771 126.25 48.8438C124.771 49.9896 123.031 50.9062 121.031 51.5938L118.062 53.1562H103.312L103.25 45.8438H114.219C115.865 45.8438 117.229 45.5521 118.312 44.9688C119.396 44.3854 120.208 43.5729 120.75 42.5312C121.312 41.4896 121.594 40.2812 121.594 38.9062C121.594 37.4479 121.323 36.1875 120.781 35.125C120.24 34.0625 119.417 33.25 118.312 32.6875C117.208 32.125 115.823 31.8438 114.156 31.8438H106.562V70H97.1875V24.5ZM122.625 70L112.25 49.7188L122.156 49.6562L132.656 69.5625V70H122.625ZM148.156 24.5V70H138.812V24.5H148.156ZM170.906 70H161L161.062 62.6875H170.906C173.365 62.6875 175.438 62.1354 177.125 61.0312C178.812 59.9062 180.083 58.2708 180.938 56.125C181.812 53.9792 182.25 51.3854 182.25 48.3438V46.125C182.25 43.7917 182 41.7396 181.5 39.9688C181.021 38.1979 180.302 36.7083 179.344 35.5C178.385 34.2917 177.208 33.3854 175.812 32.7812C174.417 32.1562 172.812 31.8438 171 31.8438H160.812V24.5H171C174.042 24.5 176.823 25.0208 179.344 26.0625C181.885 27.0833 184.083 28.5521 185.938 30.4688C187.792 32.3854 189.219 34.6771 190.219 37.3438C191.24 39.9896 191.75 42.9375 191.75 46.1875V48.3438C191.75 51.5729 191.24 54.5208 190.219 57.1875C189.219 59.8542 187.792 62.1458 185.938 64.0625C184.104 65.9583 181.906 67.4271 179.344 68.4688C176.802 69.4896 173.99 70 170.906 70ZM166.312 24.5V70H156.938V24.5H166.312ZM229.094 62.6875V70H204.875V62.6875H229.094ZM207.938 24.5V70H198.562V24.5H207.938ZM225.938 43.0312V50.1562H204.875V43.0312H225.938ZM229.062 24.5V31.8438H204.875V24.5H229.062Z" fill="white"/>
+      <mask id="path-2-outside-1_33_2" maskUnits="userSpaceOnUse" x="14" y="81" width="245" height="10" fill="black">
+        <rect fill="white" x="14" y="81" width="245" height="10"/>
+      </mask>
+      <path d="M14 81C14 84.3333 14 87.6667 14 91C18.0833 90.9167 22.1667 90.8333 26.25 90.75C99.75 89.25 173.25 87.75 246.75 86.25C250.833 86.1667 254.917 86.0833 259 86C254.917 85.9167 250.833 85.8333 246.75 85.75C173.25 84.25 99.75 82.75 26.25 81.25C22.1667 81.1667 18.0833 81.0833 14 81Z" fill="url(#paint0_linear_33_2)" mask="url(#path-2-outside-1_33_2)"/>
+      <defs>
+        <linearGradient id="paint0_linear_33_2" x1="14" y1="91.5" x2="259" y2="91.5" gradientUnits="userSpaceOnUse">
+          <stop offset="0.403846" stop-color="#FF1493"/>
+          <stop offset="1" stop-color="#2196F3"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    <span class="logo-tag">Wallet</span>
+  </div>
+  <button id="disconnect-btn" onclick="disconnect()">Disconnect</button>
+</header>
+
+<main>
+
+  <!-- ── Welcome ── -->
+  <section id="welcome">
+    <h1>Self-Custodial Wallet</h1>
+    <p>Powered by WDK · Ethereum · TRON · Bitcoin</p>
+    <div class="btn-group">
+      <button class="btn-primary" onclick="createWallet()">Create New Wallet</button>
+      <button class="btn-secondary" onclick="toggleImport()">Import Existing Wallet</button>
+    </div>
+
+    <div id="import-panel">
+      <label>Secret Recovery Phrase</label>
+      <textarea id="seed-input" placeholder="Enter your 12 or 24 word seed phrase…" rows="3"></textarea>
+      <div class="import-actions">
+        <button class="btn-secondary" onclick="toggleImport()">Cancel</button>
+        <button class="btn-primary" onclick="importWallet()">Import</button>
+      </div>
+    </div>
+
+    <div id="status"></div>
+  </section>
+
+  <!-- ── Dashboard ── -->
+  <section id="dashboard">
+
+    <!-- Seed phrase reveal (shown only on create) -->
+    <div id="seed-reveal">
+      <h3>⚠ Save Your Recovery Phrase</h3>
+      <p>Write these words down in order. Anyone with this phrase can access your wallet.</p>
+      <div class="seed-grid" id="seed-grid"></div>
+      <button class="copy-seed-btn" onclick="copySeed()">Copy seed phrase</button>
+    </div>
+
+    <!-- Balances -->
+    <div class="refresh-row">
+      <button class="refresh-btn" id="refresh-btn" onclick="loadBalances()">
+        <span id="refresh-icon">↻</span> Refresh balances
+      </button>
+    </div>
+
+    <p class="section-label">Your Wallets</p>
+
+    <div class="chain-card" id="card-ethereum">
+      <div class="chain-header">
+        <div class="chain-icon icon-eth">Ξ</div>
+        <div>
+          <div class="chain-name">Ethereum</div>
+          <div class="chain-ticker">ETH</div>
+        </div>
+        <div class="chain-balance" id="bal-ethereum">
+          <div>—</div>
+          <div class="chain-balance-units">ETH</div>
+        </div>
+      </div>
+      <div class="address-row">
+        <span class="address-text" id="addr-ethereum">—</span>
+        <button class="copy-btn" onclick="copyAddr('ethereum')" title="Copy address">⎘</button>
+      </div>
+      <div class="token-list" id="tokens-ethereum"></div>
+    </div>
+
+    <div class="chain-card" id="card-sepolia">
+      <div class="chain-header">
+        <div class="chain-icon icon-sep">Ξ</div>
+        <div>
+          <div class="chain-name">Ethereum <span class="testnet-badge">Sepolia</span></div>
+          <div class="chain-ticker">ERC-4337 · Account Abstraction</div>
+        </div>
+        <div class="chain-balance" id="bal-sepolia">
+          <div>—</div>
+          <div class="chain-balance-units">ETH</div>
+        </div>
+      </div>
+      <div class="address-row">
+        <span class="address-text" id="addr-sepolia">—</span>
+        <button class="copy-btn" onclick="copyAddr('sepolia')" title="Copy address">⎘</button>
+      </div>
+      <div class="token-list" id="tokens-sepolia"></div>
+    </div>
+
+    <div class="chain-card" id="card-tron">
+      <div class="chain-header">
+        <div class="chain-icon icon-trx">T</div>
+        <div>
+          <div class="chain-name">TRON</div>
+          <div class="chain-ticker">TRX</div>
+        </div>
+        <div class="chain-balance" id="bal-tron">
+          <div>—</div>
+          <div class="chain-balance-units">TRX</div>
+        </div>
+      </div>
+      <div class="address-row">
+        <span class="address-text" id="addr-tron">—</span>
+        <button class="copy-btn" onclick="copyAddr('tron')" title="Copy address">⎘</button>
+      </div>
+    </div>
+
+    <div class="chain-card" id="card-bitcoin">
+      <div class="chain-header">
+        <div class="chain-icon icon-btc">₿</div>
+        <div>
+          <div class="chain-name">Bitcoin</div>
+          <div class="chain-ticker">BTC</div>
+        </div>
+        <div class="chain-balance" id="bal-bitcoin">
+          <div>—</div>
+          <div class="chain-balance-units">sat</div>
+        </div>
+      </div>
+      <div class="address-row">
+        <span class="address-text" id="addr-bitcoin">—</span>
+        <button class="copy-btn" onclick="copyAddr('bitcoin')" title="Copy address">⎘</button>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+  let _addresses = {}
+  let _seedPhrase = ''
+
+  function showLoader(msg = 'Working…') {
+    document.getElementById('loader-msg').textContent = msg
+    document.getElementById('loader').classList.add('active')
+  }
+  function hideLoader() {
+    document.getElementById('loader').classList.remove('active')
+  }
+
+  function showStatus(msg, type = 'error') {
+    const el = document.getElementById('status')
+    el.textContent = msg
+    el.className = type
+    el.style.display = 'block'
+  }
+  function clearStatus() {
+    const el = document.getElementById('status')
+    el.style.display = 'none'
+  }
+
+  function toggleImport() {
+    const panel = document.getElementById('import-panel')
+    panel.style.display = panel.style.display === 'block' ? 'none' : 'block'
+    clearStatus()
+  }
+
+  async function createWallet() {
+    clearStatus()
+    showLoader('Generating wallet…')
+    try {
+      const res = await fetch('/api/create', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      _seedPhrase = data.seedPhrase
+      _addresses = data.addresses
+      showDashboard(true)
+    } catch (e) {
+      showStatus(e.message)
+    } finally {
+      hideLoader()
+    }
+  }
+
+  async function importWallet() {
+    const phrase = document.getElementById('seed-input').value.trim()
+    if (!phrase) return showStatus('Please enter your seed phrase.')
+    clearStatus()
+    showLoader('Importing wallet…')
+    try {
+      const res = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seedPhrase: phrase })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+      _addresses = data.addresses
+      _seedPhrase = ''
+      showDashboard(false)
+    } catch (e) {
+      showStatus(e.message)
+    } finally {
+      hideLoader()
+    }
+  }
+
+  function showDashboard(isNew) {
+    document.getElementById('welcome').style.display = 'none'
+    document.getElementById('dashboard').style.display = 'block'
+    document.getElementById('disconnect-btn').style.display = 'block'
+
+    // Addresses
+    document.getElementById('addr-ethereum').textContent = _addresses.ethereum || '—'
+    document.getElementById('addr-sepolia').textContent  = _addresses.sepolia  || '—'
+    document.getElementById('addr-tron').textContent     = _addresses.tron     || '—'
+    document.getElementById('addr-bitcoin').textContent  = _addresses.bitcoin  || '—'
+
+    // Seed phrase reveal
+    const seedReveal = document.getElementById('seed-reveal')
+    if (isNew && _seedPhrase) {
+      const words = _seedPhrase.split(' ')
+      const grid  = document.getElementById('seed-grid')
+      grid.innerHTML = words.map((w, i) =>
+        `<div class="seed-word"><span>${i + 1}</span><span>${w}</span></div>`
+      ).join('')
+      seedReveal.style.display = 'block'
+    } else {
+      seedReveal.style.display = 'none'
+    }
+
+    loadBalances()
+  }
+
+  async function loadBalances() {
+    const btn  = document.getElementById('refresh-btn')
+    const icon = document.getElementById('refresh-icon')
+    btn.classList.add('loading')
+    icon.className = 'spin'
+    icon.textContent = '↻'
+
+    try {
+      const res  = await fetch('/api/balances')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error)
+
+      const { balances, tokens } = data
+      setBalance('ethereum', balances.ethereum, 'ETH', 18)
+      setBalance('sepolia',  balances.sepolia,  'ETH', 18)
+      setBalance('tron',     balances.tron,     'TRX',  6)
+      setBalance('bitcoin',  balances.bitcoin,  'sat',  0)
+
+      if (tokens) {
+        for (const [chain, list] of Object.entries(tokens)) {
+          renderTokens(chain, list)
+        }
+      }
+    } catch (e) {
+      console.error('Balance fetch error:', e.message)
+    } finally {
+      btn.classList.remove('loading')
+      icon.className = ''
+      icon.textContent = '↻'
+    }
+  }
+
+  function setBalance(chain, raw, unit, decimals) {
+    const el = document.getElementById(`bal-${chain}`)
+    if (!raw || raw === 'Error') {
+      el.innerHTML = `<div>—</div><div class="chain-balance-units">${unit}</div>`
+      return
+    }
+    let display = raw
+    if (decimals > 0) {
+      const n = BigInt(raw)
+      const d = BigInt(10 ** decimals)
+      const whole = n / d
+      const frac  = ((n % d) * 10000n / d).toString().padStart(4, '0')
+      display = `${whole}.${frac}`
+    }
+    el.innerHTML = `<div>${display}</div><div class="chain-balance-units">${unit}</div>`
+  }
+
+  function renderTokens(chain, list) {
+    const el = document.getElementById(`tokens-${chain}`)
+    if (!el) return
+    el.innerHTML = list.map(t => {
+      const display = formatTokenBalance(t.balance, t.decimals)
+      return `<div class="token-row">
+        <span class="token-symbol">${t.symbol}</span>
+        <span class="token-balance">${display} ${t.symbol}</span>
+      </div>`
+    }).join('')
+  }
+
+  function formatTokenBalance(raw, decimals) {
+    if (!raw || raw === '0') return '0.00'
+    try {
+      const n = BigInt(raw)
+      const d = BigInt(10 ** decimals)
+      const whole = n / d
+      const frac  = ((n % d) * 10000n / d).toString().padStart(4, '0')
+      return `${whole}.${frac.slice(0, 2)}`
+    } catch { return '—' }
+  }
+
+  function copyAddr(chain) {
+    const addr = _addresses[chain]
+    if (addr) navigator.clipboard.writeText(addr).then(() => flash(`addr-${chain}`))
+  }
+
+  function copySeed() {
+    if (_seedPhrase) navigator.clipboard.writeText(_seedPhrase)
+  }
+
+  function flash(id) {
+    const el = document.getElementById(id)
+    const orig = el.style.color
+    el.style.color = '#2196F3'
+    setTimeout(() => { el.style.color = orig }, 800)
+  }
+
+  async function disconnect() {
+    await fetch('/api/wallet', { method: 'DELETE' })
+    _addresses = {}
+    _seedPhrase = ''
+    document.getElementById('welcome').style.display = 'block'
+    document.getElementById('dashboard').style.display = 'none'
+    document.getElementById('disconnect-btn').style.display = 'none'
+    document.getElementById('import-panel').style.display = 'none'
+    document.getElementById('seed-input').value = ''
+    ;['ethereum','sepolia','tron','bitcoin'].forEach(c => {
+      document.getElementById(`bal-${c}`).innerHTML = '<div>—</div>'
+      document.getElementById(`addr-${c}`).textContent = '—'
+    })
+  }
+</script>
+
+</body>
+</html>
