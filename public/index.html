@@ -1,1272 +1,720 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STRIDE Wallet</title>
   <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --navy: #1D1F5A;
-      --pink: #FF1493;
-      --blue: #2196F3;
-      --bg: #0d0f24;
-      --surface: #161830;
-      --surface2: #1e2040;
-      --border: rgba(255, 255, 255, 0.08);
-      --text: #e8eaf6;
-      --muted: #7986cb;
-      --radius: 16px;
+      --navy: #1D1F5A; --pink: #FF1493; --blue: #2196F3;
+      --bg: #0d0f24; --surface: #161830; --surface2: #1e2040;
+      --border: rgba(255,255,255,0.08); --text: #e8eaf6; --muted: #7986cb;
+      --radius: 14px;
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     /* ── Header ── */
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 32px;
-      border-bottom: 1px solid var(--border);
-      background: var(--surface);
-    }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--surface); }
+    .logo-wrap { display: flex; align-items: center; gap: 10px; }
+    .logo-wrap svg { height: 36px; width: auto; }
+    .logo-tag { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); padding: 3px 8px; border: 1px solid var(--border); border-radius: 6px; }
+    #lock-btn { display: none; background: transparent; border: 1px solid rgba(255,20,147,.4); color: var(--pink); padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: background .2s; }
+    #lock-btn:hover { background: rgba(255,20,147,.1); }
 
-    .logo-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    /* ── Centred panels (welcome / unlock) ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+    .panel { max-width: 380px; margin: 0 auto; text-align: center; }
+    .panel h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; background: linear-gradient(135deg, var(--pink), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .panel p  { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
 
-    .logo-wrap svg {
-      height: 40px;
-      width: auto;
-    }
+    .btn-group { display: flex; flex-direction: column; gap: 10px; }
+    .btn-primary   { padding: 13px 22px; border-radius: 12px; border: none; font-size: 14px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, var(--pink), var(--blue)); color: #fff; transition: opacity .2s, transform .15s; }
+    .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-secondary { padding: 13px 22px; border-radius: 12px; border: 1px solid var(--border); font-size: 14px; font-weight: 600; cursor: pointer; background: var(--surface2); color: var(--text); transition: background .2s; }
+    .btn-secondary:hover { background: #252850; }
 
-    .logo-tag {
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 3px 8px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+    /* ── Form elements (shared) ── */
+    .field { margin-bottom: 14px; text-align: left; }
+    .field label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; }
+    .field input, .field textarea, .field select {
+      width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); font-size: 14px; padding: 10px 13px; outline: none; transition: border-color .15s;
     }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--blue); }
+    .field textarea { resize: vertical; min-height: 72px; font-family: 'Courier New', monospace; line-height: 1.6; }
 
-    #disconnect-btn {
-      display: none;
-      background: transparent;
-      border: 1px solid rgba(255, 20, 147, 0.4);
-      color: var(--pink);
-      padding: 7px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+    /* ── Import / password panels ── */
+    .sub-panel { display: none; margin-top: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: left; }
+    .row-btns  { display: flex; gap: 8px; margin-top: 12px; }
+    .row-btns button { flex: 1; }
+    .link-btn  { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; margin-top: 14px; text-decoration: underline; }
+    .link-btn:hover { color: var(--text); }
 
-    #disconnect-btn:hover {
-      background: rgba(255, 20, 147, 0.1);
-    }
+    /* ── Inline status/error ── */
+    .msg { display: none; margin-top: 12px; padding: 10px 14px; border-radius: 10px; font-size: 13px; }
+    .msg.error { background: rgba(255,50,50,.1); border: 1px solid rgba(255,50,50,.3); color: #ff6b6b; }
+    .msg.info  { background: rgba(33,150,243,.1); border: 1px solid rgba(33,150,243,.3); color: #64b5f6; }
 
-    /* ── Main ── */
-    main {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 48px 24px;
-    }
+    /* ── Seed grid ── */
+    .seed-box { display: none; background: var(--surface); border: 1px solid rgba(255,20,147,.3); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; text-align: left; }
+    .seed-box h3 { font-size: 14px; color: var(--pink); margin-bottom: 4px; }
+    .seed-box p  { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .seed-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; }
+    .seed-word { background: var(--bg); border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; display: flex; gap: 6px; align-items: center; }
+    .seed-word span:first-child { color: var(--muted); font-size: 10px; min-width: 14px; }
+    .seed-word span:last-child  { font-size: 12px; font-weight: 500; }
+    .copy-seed-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 12px; cursor: pointer; }
+    .copy-seed-btn:hover { color: var(--text); border-color: var(--blue); }
 
-    /* ── Welcome screen ── */
-    #welcome {
-      text-align: center;
-    }
+    /* ── Dashboard: 2-column account grid ── */
+    #dashboard { display: none; }
+    .dash-toolbar { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+    .refresh-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 7px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: color .2s, border-color .2s; }
+    .refresh-btn:hover { color: var(--text); border-color: rgba(255,255,255,.2); }
+    .refresh-btn.loading { opacity: .5; pointer-events: none; }
+    .spin { animation: spin .8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    #welcome h1 {
-      font-size: 32px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      background: linear-gradient(135deg, var(--pink), var(--blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
+    .accounts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 700px) { .accounts-grid { grid-template-columns: 1fr; } }
 
-    #welcome p {
-      color: var(--muted);
-      margin-bottom: 40px;
-      font-size: 15px;
-    }
+    .account-col { display: flex; flex-direction: column; gap: 12px; }
+    .account-header { display: flex; align-items: center; gap: 10px; padding: 0 4px; margin-bottom: 2px; }
+    .account-label { font-size: 13px; font-weight: 700; letter-spacing: .04em; color: var(--text); }
+    .account-addr  { font-family: 'Courier New', monospace; font-size: 10px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
 
-    .btn-group {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-width: 320px;
-      margin: 0 auto;
-    }
+    /* ── Chain card ── */
+    .chain-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; transition: border-color .2s; }
+    .chain-card:hover { border-color: rgba(255,255,255,.13); }
+    .chain-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .chain-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; flex-shrink: 0; }
+    .icon-eth { background: linear-gradient(135deg,#627eea,#8fa4f3); }
+    .icon-sep { background: linear-gradient(135deg,#a259f7,#c084fc); }
+    .icon-trx { background: linear-gradient(135deg,#ef0027,#ff6b6b); }
+    .icon-btc { background: linear-gradient(135deg,#f7931a,#ffb347); }
+    .chain-name  { font-size: 14px; font-weight: 600; }
+    .chain-sub   { font-size: 11px; color: var(--muted); }
+    .testnet-badge { display: inline-block; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; background: rgba(162,89,247,.15); color: #c084fc; border: 1px solid rgba(162,89,247,.3); padding: 1px 5px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+    .chain-balance { margin-left: auto; text-align: right; }
+    .chain-balance-val   { font-size: 18px; font-weight: 700; }
+    .chain-balance-unit  { font-size: 11px; color: var(--muted); }
 
-    .btn-primary {
-      padding: 14px 24px;
-      border-radius: 12px;
-      border: none;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      background: linear-gradient(135deg, var(--pink), var(--blue));
-      color: white;
-      transition: opacity 0.2s, transform 0.15s;
-    }
+    .addr-row { display: flex; align-items: center; gap: 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 8px 12px; }
+    .addr-text { font-family: 'Courier New', monospace; font-size: 11px; color: var(--muted); flex: 1; word-break: break-all; }
+    .copy-btn  { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; padding: 2px 4px; flex-shrink: 0; transition: color .2s; }
+    .copy-btn:hover { color: var(--text); }
 
-    .btn-primary:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
+    .token-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .token-row  { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; font-size: 12px; }
+    .token-symbol  { font-weight: 600; }
+    .token-balance { color: var(--muted); font-variant-numeric: tabular-nums; }
 
-    .btn-primary:active {
-      transform: translateY(0);
-    }
+    .card-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .card-btn { flex: 1; padding: 7px 0; border-radius: 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 12px; font-weight: 500; cursor: pointer; transition: background .15s, border-color .15s; }
+    .card-btn:hover { background: #252850; border-color: rgba(255,255,255,.15); }
+    .card-btn.send-btn { border-color: rgba(255,20,147,.3); color: var(--pink); }
+    .card-btn.send-btn:hover { background: rgba(255,20,147,.08); }
+    .card-btn.qr-btn   { border-color: rgba(33,150,243,.3);   color: var(--blue); }
+    .card-btn.qr-btn:hover   { background: rgba(33,150,243,.08); }
 
-    .btn-secondary {
-      padding: 14px 24px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      background: var(--surface2);
-      color: var(--text);
-      transition: background 0.2s;
-    }
-
-    .btn-secondary:hover {
-      background: #252850;
-    }
-
-    /* ── Import panel ── */
-    #import-panel {
-      display: none;
-      margin-top: 24px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      text-align: left;
-    }
-
-    #import-panel label {
-      font-size: 13px;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 8px;
-    }
-
-    #import-panel textarea {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 14px;
-      padding: 12px;
-      resize: vertical;
-      min-height: 80px;
-      font-family: 'Courier New', monospace;
-      line-height: 1.6;
-      outline: none;
-    }
-
-    #import-panel textarea:focus {
-      border-color: var(--blue);
-    }
-
-    .import-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .import-actions button {
-      flex: 1;
-    }
-
-    /* ── Seed phrase reveal ── */
-    #seed-reveal {
-      display: none;
-      background: var(--surface);
-      border: 1px solid rgba(255, 20, 147, 0.3);
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 28px;
-    }
-
-    #seed-reveal h3 {
-      font-size: 15px;
-      color: var(--pink);
-      margin-bottom: 6px;
-    }
-
-    #seed-reveal p {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 18px;
-    }
-
-    .seed-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-
-    .seed-word {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .seed-word span:first-child {
-      color: var(--muted);
-      font-size: 11px;
-      min-width: 16px;
-    }
-
-    .seed-word span:last-child {
-      font-size: 13px;
-      font-weight: 500;
-    }
-
-    .copy-seed-btn {
-      width: 100%;
-      padding: 10px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
-    }
-
-    .copy-seed-btn:hover {
-      color: var(--text);
-      border-color: var(--blue);
-    }
-
-    /* ── Dashboard ── */
-    #dashboard {
-      display: none;
-    }
-
-    .section-label {
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 14px;
-    }
-
-    .chain-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px;
-      margin-bottom: 14px;
-      transition: border-color 0.2s;
-    }
-
-    .chain-card:hover {
-      border-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .chain-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .chain-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .icon-eth {
-      background: linear-gradient(135deg, #627eea, #8fa4f3);
-    }
-
-    .icon-sep {
-      background: linear-gradient(135deg, #a259f7, #c084fc);
-    }
-
-    .icon-trx {
-      background: linear-gradient(135deg, #ef0027, #ff6b6b);
-    }
-
-    .icon-btc {
-      background: linear-gradient(135deg, #f7931a, #ffb347);
-    }
-
-    .testnet-badge {
-      display: inline-block;
-      font-size: 10px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: rgba(162, 89, 247, 0.15);
-      color: #c084fc;
-      border: 1px solid rgba(162, 89, 247, 0.3);
-      padding: 2px 7px;
-      border-radius: 4px;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-
-    .chain-name {
-      font-size: 15px;
-      font-weight: 600;
-    }
-
-    .chain-ticker {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .chain-balance {
-      font-size: 22px;
-      font-weight: 700;
-      margin-left: auto;
-      text-align: right;
-    }
-
-    .chain-balance-units {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .token-list {
-      margin-top: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .token-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 13px;
-    }
-
-    .token-symbol {
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .token-balance {
-      color: var(--muted);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .address-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 14px;
-    }
-
-    .address-text {
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      color: var(--muted);
-      flex: 1;
-      word-break: break-all;
-    }
-
-    .copy-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--muted);
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 13px;
-      transition: color 0.2s;
-      flex-shrink: 0;
-    }
-
-    .copy-btn:hover {
-      color: var(--text);
-    }
-
-    /* ── Card action buttons ── */
-    .card-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .card-btn {
-      flex: 1;
-      padding: 9px 0;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-
-    .card-btn:hover {
-      background: #252850;
-      border-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .card-btn.send-btn {
-      border-color: rgba(255, 20, 147, 0.3);
-      color: var(--pink);
-    }
-
-    .card-btn.send-btn:hover {
-      background: rgba(255, 20, 147, 0.08);
-    }
-
-    .card-btn.qr-btn {
-      border-color: rgba(33, 150, 243, 0.3);
-      color: var(--blue);
-    }
-
-    .card-btn.qr-btn:hover {
-      background: rgba(33, 150, 243, 0.08);
-    }
+    /* ── History section ── */
+    .history-section { margin-top: 10px; display: none; }
+    .history-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .history-item:last-child { border-bottom: none; }
+    .hist-dir { font-size: 15px; flex-shrink: 0; }
+    .hist-body { flex: 1; overflow: hidden; }
+    .hist-val  { font-weight: 600; }
+    .hist-sub  { color: var(--muted); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hist-hash { color: var(--muted); font-family: 'Courier New', monospace; font-size: 10px; text-align: right; flex-shrink: 0; max-width: 80px; overflow: hidden; text-overflow: ellipsis; }
+    .hist-empty { color: var(--muted); font-size: 12px; padding: 8px 0; text-align: center; }
 
     /* ── Modals ── */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(13, 15, 36, 0.85);
-      backdrop-filter: blur(6px);
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-    }
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(13,15,36,.85); backdrop-filter: blur(6px); align-items: center; justify-content: center; z-index: 200; }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 24px; width: 100%; max-width: 400px; margin: 16px; }
+    .modal-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px; }
+    .modal-close:hover { color: var(--text); }
+    .modal-err { display: none; margin-top: 10px; padding: 9px 13px; background: rgba(255,50,50,.08); border: 1px solid rgba(255,50,50,.25); border-radius: 9px; font-size: 12px; color: #ff6b6b; }
 
-    .modal-backdrop.open {
-      display: flex;
-    }
+    /* Send modal steps */
+    .send-step { display: none; }
+    .send-step.active { display: block; }
+    .fee-preview { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 14px; font-size: 13px; }
+    .fee-preview .fee-row { display: flex; justify-content: space-between; padding: 4px 0; }
+    .fee-preview .fee-row:not(:last-child) { border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 8px; }
+    .fee-preview .fee-label { color: var(--muted); }
+    .fee-preview .fee-total { font-weight: 700; color: var(--pink); }
+    .send-submit { width: 100%; padding: 12px; border-radius: 11px; border: none; background: linear-gradient(135deg, var(--pink), var(--blue)); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px; transition: opacity .2s; }
+    .send-submit:hover { opacity: .9; }
+    .send-submit:disabled { opacity: .45; cursor: not-allowed; }
+    .tx-result { display: none; margin-top: 12px; padding: 10px 13px; background: rgba(33,150,243,.08); border: 1px solid rgba(33,150,243,.25); border-radius: 9px; font-size: 11px; word-break: break-all; }
+    .tx-result strong { color: var(--blue); display: block; margin-bottom: 4px; font-size: 13px; }
 
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 28px;
-      width: 100%;
-      max-width: 420px;
-      margin: 16px;
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 22px;
-    }
-
-    .modal-title {
-      font-size: 17px;
-      font-weight: 700;
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-size: 22px;
-      cursor: pointer;
-      line-height: 1;
-      padding: 2px 6px;
-      border-radius: 6px;
-      transition: color 0.15s;
-    }
-
-    .modal-close:hover {
-      color: var(--text);
-    }
-
-    .form-field {
-      margin-bottom: 16px;
-    }
-
-    .form-label {
-      font-size: 12px;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 6px;
-      letter-spacing: 0.05em;
-    }
-
-    .form-input,
-    .form-select {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      font-size: 14px;
-      padding: 11px 14px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    .form-input:focus,
-    .form-select:focus {
-      border-color: var(--blue);
-    }
-
-    .form-select {
-      appearance: none;
-      cursor: pointer;
-    }
-
-    .send-submit {
-      width: 100%;
-      padding: 13px;
-      border-radius: 12px;
-      border: none;
-      background: linear-gradient(135deg, var(--pink), var(--blue));
-      color: white;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 4px;
-      transition: opacity 0.2s;
-    }
-
-    .send-submit:hover {
-      opacity: 0.9;
-    }
-
-    .send-submit:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .tx-result {
-      display: none;
-      margin-top: 14px;
-      padding: 12px 14px;
-      background: rgba(33, 150, 243, 0.08);
-      border: 1px solid rgba(33, 150, 243, 0.25);
-      border-radius: 10px;
-      font-size: 12px;
-      word-break: break-all;
-    }
-
-    .tx-result strong {
-      color: var(--blue);
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .modal-error {
-      display: none;
-      margin-top: 12px;
-      padding: 10px 14px;
-      background: rgba(255, 50, 50, 0.08);
-      border: 1px solid rgba(255, 50, 50, 0.25);
-      border-radius: 10px;
-      font-size: 13px;
-      color: #ff6b6b;
-    }
-
-    /* ── QR modal specifics ── */
-    .qr-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      padding: 8px 0;
-    }
-
-    .qr-wrap svg {
-      width: 200px;
-      height: 200px;
-      border-radius: 12px;
-      background: white;
-      padding: 8px;
-    }
-
-    .qr-address {
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      color: var(--muted);
-      text-align: center;
-      word-break: break-all;
-      max-width: 300px;
-    }
-
-    .qr-copy-btn {
-      padding: 9px 24px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--text);
-      font-size: 13px;
-      cursor: pointer;
-    }
-
-    .qr-copy-btn:hover {
-      background: #252850;
-    }
-
-    /* ── Refresh button ── */
-    .refresh-row {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 16px;
-    }
-
-    .refresh-btn {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: color 0.2s, border-color 0.2s;
-    }
-
-    .refresh-btn:hover {
-      color: var(--text);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .refresh-btn.loading {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .spin {
-      display: inline-block;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* ── Status / error ── */
-    #status {
-      display: none;
-      margin-top: 16px;
-      padding: 12px 16px;
-      border-radius: 10px;
-      font-size: 13px;
-    }
-
-    #status.error {
-      background: rgba(255, 50, 50, 0.1);
-      border: 1px solid rgba(255, 50, 50, 0.3);
-      color: #ff6b6b;
-    }
-
-    #status.info {
-      background: rgba(33, 150, 243, 0.1);
-      border: 1px solid rgba(33, 150, 243, 0.3);
-      color: #64b5f6;
-    }
+    /* QR modal */
+    .qr-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 4px 0; }
+    .qr-wrap svg { width: 190px; height: 190px; border-radius: 10px; background: #fff; padding: 8px; }
+    .qr-address { font-family: 'Courier New', monospace; font-size: 11px; color: var(--muted); text-align: center; word-break: break-all; max-width: 280px; }
+    .qr-copy { padding: 8px 22px; border-radius: 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 13px; cursor: pointer; }
+    .qr-copy:hover { background: #252850; }
 
     /* ── Loading overlay ── */
-    #loader {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(13, 15, 36, 0.8);
-      backdrop-filter: blur(4px);
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 16px;
-      z-index: 100;
-    }
-
-    #loader.active {
-      display: flex;
-    }
-
-    .loader-ring {
-      width: 48px;
-      height: 48px;
-      border: 3px solid var(--border);
-      border-top-color: var(--pink);
-      border-right-color: var(--blue);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    #loader p {
-      color: var(--muted);
-      font-size: 14px;
-    }
+    #loader { display: none; position: fixed; inset: 0; background: rgba(13,15,36,.8); backdrop-filter: blur(4px); align-items: center; justify-content: center; flex-direction: column; gap: 14px; z-index: 300; }
+    #loader.active { display: flex; }
+    .loader-ring { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--pink); border-right-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; }
+    #loader p { color: var(--muted); font-size: 14px; }
   </style>
 </head>
-
 <body>
 
-  <!-- Loading overlay -->
-  <div id="loader">
-    <div class="loader-ring"></div>
-    <p id="loader-msg">Setting up wallet…</p>
+<!-- Loading overlay -->
+<div id="loader"><div class="loader-ring"></div><p id="loader-msg">Working…</p></div>
+
+<!-- Header -->
+<header>
+  <div class="logo-wrap">
+    <svg width="273" height="121" viewBox="0 0 273 121" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M41.75 58.0938C41.75 57.2812 41.625 56.5521 41.375 55.9062C41.1458 55.2396 40.7083 54.6354 40.0625 54.0938C39.4167 53.5312 38.5104 52.9792 37.3438 52.4375C36.1771 51.8958 34.6667 51.3333 32.8125 50.75C30.75 50.0833 28.7917 49.3333 26.9375 48.5C25.1042 47.6667 23.4792 46.6979 22.0625 45.5938C20.6667 44.4688 19.5625 43.1667 18.75 41.6875C17.9583 40.2083 17.5625 38.4896 17.5625 36.5312C17.5625 34.6354 17.9792 32.9167 18.8125 31.375C19.6458 29.8125 20.8125 28.4792 22.3125 27.375C23.8125 26.25 25.5833 25.3854 27.625 24.7812C29.6875 24.1771 31.9479 23.875 34.4062 23.875C37.7604 23.875 40.6875 24.4792 43.1875 25.6875C45.6875 26.8958 47.625 28.5521 49 30.6562C50.3958 32.7604 51.0938 35.1667 51.0938 37.875H41.7812C41.7812 36.5417 41.5 35.375 40.9375 34.375C40.3958 33.3542 39.5625 32.5521 38.4375 31.9688C37.3333 31.3854 35.9375 31.0938 34.25 31.0938C32.625 31.0938 31.2708 31.3438 30.1875 31.8438C29.1042 32.3229 28.2917 32.9792 27.75 33.8125C27.2083 34.625 26.9375 35.5417 26.9375 36.5625C26.9375 37.3333 27.125 38.0312 27.5 38.6562C27.8958 39.2812 28.4792 39.8646 29.25 40.4062C30.0208 40.9479 30.9688 41.4583 32.0938 41.9375C33.2188 42.4167 34.5208 42.8854 36 43.3438C38.4792 44.0938 40.6562 44.9375 42.5312 45.875C44.4271 46.8125 46.0104 47.8646 47.2812 49.0312C48.5521 50.1979 49.5104 51.5208 50.1562 53C50.8021 54.4792 51.125 56.1562 51.125 58.0312C51.125 60.0104 50.7396 61.7812 49.9688 63.3438C49.1979 64.9062 48.0833 66.2292 46.625 67.3125C45.1667 68.3958 43.4271 69.2188 41.4062 69.7812C39.3854 70.3438 37.125 70.625 34.625 70.625C32.375 70.625 30.1562 70.3333 27.9688 69.75C25.7812 69.1458 23.7917 68.2396 22 67.0312C20.2292 65.8229 18.8125 64.2812 17.75 62.4062C16.6875 60.5312 16.1562 58.3125 16.1562 55.75H25.5625C25.5625 57.1667 25.7812 58.3646 26.2188 59.3438C26.6562 60.3229 27.2708 61.1146 28.0625 61.7188C28.875 62.3229 29.8333 62.7604 30.9375 63.0312C32.0625 63.3021 33.2917 63.4375 34.625 63.4375C36.25 63.4375 37.5833 63.2083 38.625 62.75C39.6875 62.2917 40.4688 61.6562 40.9688 60.8438C41.4896 60.0312 41.75 59.1146 41.75 58.0938ZM77.8438 24.5V70H68.5V24.5H77.8438ZM91.8438 24.5V31.8438H54.7188V24.5H91.8438ZM97.1875 24.5H114.156C117.635 24.5 120.625 25.0208 123.125 26.0625C125.646 27.1042 127.583 28.6458 128.938 30.6875C130.292 32.7292 130.969 35.2396 130.969 38.2188C130.969 40.6562 130.552 42.75 129.719 44.5C128.906 46.2292 127.75 47.6771 126.25 48.8438C124.771 49.9896 123.031 50.9062 121.031 51.5938L118.062 53.1562H103.312L103.25 45.8438H114.219C115.865 45.8438 117.229 45.5521 118.312 44.9688C119.396 44.3854 120.208 43.5729 120.75 42.5312C121.312 41.4896 121.594 40.2812 121.594 38.9062C121.594 37.4479 121.323 36.1875 120.781 35.125C120.24 34.0625 119.417 33.25 118.312 32.6875C117.208 32.125 115.823 31.8438 114.156 31.8438H106.562V70H97.1875V24.5ZM122.625 70L112.25 49.7188L122.156 49.6562L132.656 69.5625V70H122.625ZM148.156 24.5V70H138.812V24.5H148.156ZM170.906 70H161L161.062 62.6875H170.906C173.365 62.6875 175.438 62.1354 177.125 61.0312C178.812 59.9062 180.083 58.2708 180.938 56.125C181.812 53.9792 182.25 51.3854 182.25 48.3438V46.125C182.25 43.7917 182 41.7396 181.5 39.9688C181.021 38.1979 180.302 36.7083 179.344 35.5C178.385 34.2917 177.208 33.3854 175.812 32.7812C174.417 32.1562 172.812 31.8438 171 31.8438H160.812V24.5H171C174.042 24.5 176.823 25.0208 179.344 26.0625C181.885 27.0833 184.083 28.5521 185.938 30.4688C187.792 32.3854 189.219 34.6771 190.219 37.3438C191.24 39.9896 191.75 42.9375 191.75 46.1875V48.3438C191.75 51.5729 191.24 54.5208 190.219 57.1875C189.219 59.8542 187.792 62.1458 185.938 64.0625C184.104 65.9583 181.906 67.4271 179.344 68.4688C176.802 69.4896 173.99 70 170.906 70ZM166.312 24.5V70H156.938V24.5H166.312ZM229.094 62.6875V70H204.875V62.6875H229.094ZM207.938 24.5V70H198.562V24.5H207.938ZM225.938 43.0312V50.1562H204.875V43.0312H225.938ZM229.062 24.5V31.8438H204.875V24.5H229.062Z" fill="white"/>
+      <mask id="m1" maskUnits="userSpaceOnUse" x="14" y="81" width="245" height="10" fill="black"><rect fill="white" x="14" y="81" width="245" height="10"/></mask>
+      <path d="M14 81C14 84.3333 14 87.6667 14 91C18.0833 90.9167 22.1667 90.8333 26.25 90.75C99.75 89.25 173.25 87.75 246.75 86.25C250.833 86.1667 254.917 86.0833 259 86C254.917 85.9167 250.833 85.8333 246.75 85.75C173.25 84.25 99.75 82.75 26.25 81.25C22.1667 81.1667 18.0833 81.0833 14 81Z" fill="url(#g1)" mask="url(#m1)"/>
+      <defs><linearGradient id="g1" x1="14" y1="91.5" x2="259" y2="91.5" gradientUnits="userSpaceOnUse"><stop offset="0.403846" stop-color="#FF1493"/><stop offset="1" stop-color="#2196F3"/></linearGradient></defs>
+    </svg>
+    <span class="logo-tag">Wallet</span>
   </div>
+  <button id="lock-btn" onclick="lockWallet()">Lock</button>
+</header>
 
-  <!-- Header -->
-  <header>
-    <div class="logo-wrap">
-      <!-- STRIDE logo (white, for dark background) -->
-      <svg width="273" height="121" viewBox="0 0 273 121" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M41.75 58.0938C41.75 57.2812 41.625 56.5521 41.375 55.9062C41.1458 55.2396 40.7083 54.6354 40.0625 54.0938C39.4167 53.5312 38.5104 52.9792 37.3438 52.4375C36.1771 51.8958 34.6667 51.3333 32.8125 50.75C30.75 50.0833 28.7917 49.3333 26.9375 48.5C25.1042 47.6667 23.4792 46.6979 22.0625 45.5938C20.6667 44.4688 19.5625 43.1667 18.75 41.6875C17.9583 40.2083 17.5625 38.4896 17.5625 36.5312C17.5625 34.6354 17.9792 32.9167 18.8125 31.375C19.6458 29.8125 20.8125 28.4792 22.3125 27.375C23.8125 26.25 25.5833 25.3854 27.625 24.7812C29.6875 24.1771 31.9479 23.875 34.4062 23.875C37.7604 23.875 40.6875 24.4792 43.1875 25.6875C45.6875 26.8958 47.625 28.5521 49 30.6562C50.3958 32.7604 51.0938 35.1667 51.0938 37.875H41.7812C41.7812 36.5417 41.5 35.375 40.9375 34.375C40.3958 33.3542 39.5625 32.5521 38.4375 31.9688C37.3333 31.3854 35.9375 31.0938 34.25 31.0938C32.625 31.0938 31.2708 31.3438 30.1875 31.8438C29.1042 32.3229 28.2917 32.9792 27.75 33.8125C27.2083 34.625 26.9375 35.5417 26.9375 36.5625C26.9375 37.3333 27.125 38.0312 27.5 38.6562C27.8958 39.2812 28.4792 39.8646 29.25 40.4062C30.0208 40.9479 30.9688 41.4583 32.0938 41.9375C33.2188 42.4167 34.5208 42.8854 36 43.3438C38.4792 44.0938 40.6562 44.9375 42.5312 45.875C44.4271 46.8125 46.0104 47.8646 47.2812 49.0312C48.5521 50.1979 49.5104 51.5208 50.1562 53C50.8021 54.4792 51.125 56.1562 51.125 58.0312C51.125 60.0104 50.7396 61.7812 49.9688 63.3438C49.1979 64.9062 48.0833 66.2292 46.625 67.3125C45.1667 68.3958 43.4271 69.2188 41.4062 69.7812C39.3854 70.3438 37.125 70.625 34.625 70.625C32.375 70.625 30.1562 70.3333 27.9688 69.75C25.7812 69.1458 23.7917 68.2396 22 67.0312C20.2292 65.8229 18.8125 64.2812 17.75 62.4062C16.6875 60.5312 16.1562 58.3125 16.1562 55.75H25.5625C25.5625 57.1667 25.7812 58.3646 26.2188 59.3438C26.6562 60.3229 27.2708 61.1146 28.0625 61.7188C28.875 62.3229 29.8333 62.7604 30.9375 63.0312C32.0625 63.3021 33.2917 63.4375 34.625 63.4375C36.25 63.4375 37.5833 63.2083 38.625 62.75C39.6875 62.2917 40.4688 61.6562 40.9688 60.8438C41.4896 60.0312 41.75 59.1146 41.75 58.0938ZM77.8438 24.5V70H68.5V24.5H77.8438ZM91.8438 24.5V31.8438H54.7188V24.5H91.8438ZM97.1875 24.5H114.156C117.635 24.5 120.625 25.0208 123.125 26.0625C125.646 27.1042 127.583 28.6458 128.938 30.6875C130.292 32.7292 130.969 35.2396 130.969 38.2188C130.969 40.6562 130.552 42.75 129.719 44.5C128.906 46.2292 127.75 47.6771 126.25 48.8438C124.771 49.9896 123.031 50.9062 121.031 51.5938L118.062 53.1562H103.312L103.25 45.8438H114.219C115.865 45.8438 117.229 45.5521 118.312 44.9688C119.396 44.3854 120.208 43.5729 120.75 42.5312C121.312 41.4896 121.594 40.2812 121.594 38.9062C121.594 37.4479 121.323 36.1875 120.781 35.125C120.24 34.0625 119.417 33.25 118.312 32.6875C117.208 32.125 115.823 31.8438 114.156 31.8438H106.562V70H97.1875V24.5ZM122.625 70L112.25 49.7188L122.156 49.6562L132.656 69.5625V70H122.625ZM148.156 24.5V70H138.812V24.5H148.156ZM170.906 70H161L161.062 62.6875H170.906C173.365 62.6875 175.438 62.1354 177.125 61.0312C178.812 59.9062 180.083 58.2708 180.938 56.125C181.812 53.9792 182.25 51.3854 182.25 48.3438V46.125C182.25 43.7917 182 41.7396 181.5 39.9688C181.021 38.1979 180.302 36.7083 179.344 35.5C178.385 34.2917 177.208 33.3854 175.812 32.7812C174.417 32.1562 172.812 31.8438 171 31.8438H160.812V24.5H171C174.042 24.5 176.823 25.0208 179.344 26.0625C181.885 27.0833 184.083 28.5521 185.938 30.4688C187.792 32.3854 189.219 34.6771 190.219 37.3438C191.24 39.9896 191.75 42.9375 191.75 46.1875V48.3438C191.75 51.5729 191.24 54.5208 190.219 57.1875C189.219 59.8542 187.792 62.1458 185.938 64.0625C184.104 65.9583 181.906 67.4271 179.344 68.4688C176.802 69.4896 173.99 70 170.906 70ZM166.312 24.5V70H156.938V24.5H166.312ZM229.094 62.6875V70H204.875V62.6875H229.094ZM207.938 24.5V70H198.562V24.5H207.938ZM225.938 43.0312V50.1562H204.875V43.0312H225.938ZM229.062 24.5V31.8438H204.875V24.5H229.062Z"
-          fill="white" />
-        <mask id="path-2-outside-1_33_2" maskUnits="userSpaceOnUse" x="14" y="81" width="245" height="10" fill="black">
-          <rect fill="white" x="14" y="81" width="245" height="10" />
-        </mask>
-        <path
-          d="M14 81C14 84.3333 14 87.6667 14 91C18.0833 90.9167 22.1667 90.8333 26.25 90.75C99.75 89.25 173.25 87.75 246.75 86.25C250.833 86.1667 254.917 86.0833 259 86C254.917 85.9167 250.833 85.8333 246.75 85.75C173.25 84.25 99.75 82.75 26.25 81.25C22.1667 81.1667 18.0833 81.0833 14 81Z"
-          fill="url(#paint0_linear_33_2)" mask="url(#path-2-outside-1_33_2)" />
-        <defs>
-          <linearGradient id="paint0_linear_33_2" x1="14" y1="91.5" x2="259" y2="91.5" gradientUnits="userSpaceOnUse">
-            <stop offset="0.403846" stop-color="#FF1493" />
-            <stop offset="1" stop-color="#2196F3" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <span class="logo-tag">Wallet</span>
-    </div>
-    <button id="disconnect-btn" onclick="disconnect()">Disconnect</button>
-  </header>
+<main>
 
-  <main>
-
-    <!-- ── Welcome ── -->
-    <section id="welcome">
-      <h1>STRIDE Wallet - Demo Self-Custodial Wallet</h1>
-      <p>Making Stablecoins Bankable</p>
+  <!-- ── Unlock screen ── -->
+  <section id="screen-unlock" style="display:none">
+    <div class="panel">
+      <h1>Welcome back</h1>
+      <p>Enter your password to unlock your wallet</p>
+      <div class="field"><label>Password</label><input type="password" id="unlock-pw" placeholder="••••••••" /></div>
       <div class="btn-group">
-        <button class="btn-primary" onclick="createWallet()">Create New Wallet</button>
-        <button class="btn-secondary" onclick="toggleImport()">Import Existing Wallet</button>
+        <button class="btn-primary" onclick="unlockWallet()">Unlock</button>
       </div>
+      <div id="unlock-err" class="msg error"></div>
+      <button class="link-btn" onclick="showScreen('welcome')">Use a different wallet</button>
+    </div>
+  </section>
 
-      <div id="import-panel">
-        <label>Secret Recovery Phrase</label>
-        <textarea id="seed-input" placeholder="Enter your 12 or 24 word seed phrase…" rows="3"></textarea>
-        <div class="import-actions">
-          <button class="btn-secondary" onclick="toggleImport()">Cancel</button>
-          <button class="btn-primary" onclick="importWallet()">Import</button>
-        </div>
-      </div>
-
-      <div id="status"></div>
-    </section>
-
-    <!-- ── Dashboard ── -->
-    <section id="dashboard">
-
-      <!-- Seed phrase reveal (shown only on create) -->
-      <div id="seed-reveal">
-        <h3>⚠ Save Your Recovery Phrase</h3>
-        <p>Write these words down in order. Anyone with this phrase can access your wallet.</p>
-        <div class="seed-grid" id="seed-grid"></div>
-        <button class="copy-seed-btn" onclick="copySeed()">Copy seed phrase</button>
-      </div>
-
-      <!-- Balances -->
-      <div class="refresh-row">
-        <button class="refresh-btn" id="refresh-btn" onclick="loadBalances()">
-          <span id="refresh-icon">↻</span> Refresh balances
-        </button>
-      </div>
-
-      <p class="section-label">Your Wallets</p>
-
-      <div class="chain-card" id="card-ethereum">
-        <div class="chain-header">
-          <div class="chain-icon icon-eth">Ξ</div>
-          <div>
-            <div class="chain-name">Ethereum</div>
-            <div class="chain-ticker">ETH</div>
-          </div>
-          <div class="chain-balance" id="bal-ethereum">
-            <div>—</div>
-            <div class="chain-balance-units">ETH</div>
-          </div>
-        </div>
-        <div class="address-row">
-          <span class="address-text" id="addr-ethereum">—</span>
-          <button class="copy-btn" onclick="copyAddr('ethereum')" title="Copy address">⎘</button>
-        </div>
-        <div class="token-list" id="tokens-ethereum"></div>
-        <div class="card-actions">
-          <button class="card-btn send-btn" onclick="openSend('ethereum')">↑ Send</button>
-          <button class="card-btn qr-btn" onclick="openQR('ethereum')">⬛ Receive</button>
-        </div>
-      </div>
-
-      <div class="chain-card" id="card-sepolia">
-        <div class="chain-header">
-          <div class="chain-icon icon-sep">Ξ</div>
-          <div>
-            <div class="chain-name">Ethereum <span class="testnet-badge">Sepolia</span></div>
-            <div class="chain-ticker">ERC-4337 · Account Abstraction</div>
-          </div>
-          <div class="chain-balance" id="bal-sepolia">
-            <div>—</div>
-            <div class="chain-balance-units">ETH</div>
-          </div>
-        </div>
-        <div class="address-row">
-          <span class="address-text" id="addr-sepolia">—</span>
-          <button class="copy-btn" onclick="copyAddr('sepolia')" title="Copy address">⎘</button>
-        </div>
-        <div class="token-list" id="tokens-sepolia"></div>
-        <div class="card-actions">
-          <button class="card-btn send-btn" onclick="openSend('sepolia')">↑ Send</button>
-          <button class="card-btn qr-btn" onclick="openQR('sepolia')">⬛ Receive</button>
-        </div>
-      </div>
-
-      <div class="chain-card" id="card-tron">
-        <div class="chain-header">
-          <div class="chain-icon icon-trx">T</div>
-          <div>
-            <div class="chain-name">TRON</div>
-            <div class="chain-ticker">TRX</div>
-          </div>
-          <div class="chain-balance" id="bal-tron">
-            <div>—</div>
-            <div class="chain-balance-units">TRX</div>
-          </div>
-        </div>
-        <div class="address-row">
-          <span class="address-text" id="addr-tron">—</span>
-          <button class="copy-btn" onclick="copyAddr('tron')" title="Copy address">⎘</button>
-        </div>
-        <div class="card-actions">
-          <button class="card-btn send-btn" onclick="openSend('tron')">↑ Send</button>
-          <button class="card-btn qr-btn" onclick="openQR('tron')">⬛ Receive</button>
-        </div>
-      </div>
-
-      <div class="chain-card" id="card-bitcoin">
-        <div class="chain-header">
-          <div class="chain-icon icon-btc">₿</div>
-          <div>
-            <div class="chain-name">Bitcoin</div>
-            <div class="chain-ticker">BTC</div>
-          </div>
-          <div class="chain-balance" id="bal-bitcoin">
-            <div>—</div>
-            <div class="chain-balance-units">sat</div>
-          </div>
-        </div>
-        <div class="address-row">
-          <span class="address-text" id="addr-bitcoin">—</span>
-          <button class="copy-btn" onclick="copyAddr('bitcoin')" title="Copy address">⎘</button>
-        </div>
-        <div class="card-actions">
-          <button class="card-btn send-btn" onclick="openSend('bitcoin')">↑ Send</button>
-          <button class="card-btn qr-btn" onclick="openQR('bitcoin')">⬛ Receive</button>
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- Send modal -->
-  <div class="modal-backdrop" id="send-modal" onclick="if(event.target===this)closeModal('send-modal')">
-    <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title">Send</span>
-        <button class="modal-close" onclick="closeModal('send-modal')">×</button>
-      </div>
-
-      <div class="form-field">
-        <label class="form-label">Asset</label>
-        <select class="form-select" id="send-asset"></select>
-      </div>
-      <div class="form-field">
-        <label class="form-label">Recipient address</label>
-        <input class="form-input" id="send-to" type="text" placeholder="0x… or T… or bc1…" autocomplete="off"
-          spellcheck="false" />
-      </div>
-      <div class="form-field">
-        <label class="form-label" id="send-amount-label">Amount</label>
-        <input class="form-input" id="send-amount" type="number" min="0" step="any" placeholder="0.00" />
-      </div>
-
-      <button class="send-submit" id="send-submit-btn" onclick="submitSend()">Send</button>
-      <div class="modal-error" id="send-error"></div>
-      <div class="tx-result" id="tx-result">
-        <strong>Transaction sent</strong>
-        <span id="tx-hash"></span>
+  <!-- ── Welcome screen ── -->
+  <section id="screen-welcome" style="display:none">
+    <div class="panel">
+      <h1>Self-Custodial Wallet</h1>
+      <p>Powered by WDK · ETH · Sepolia · TRON · BTC</p>
+      <div class="btn-group">
+        <button class="btn-primary"   onclick="showScreen('create')">Create New Wallet</button>
+        <button class="btn-secondary" onclick="showScreen('import')">Import Existing Wallet</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- QR / Receive modal -->
-  <div class="modal-backdrop" id="qr-modal" onclick="if(event.target===this)closeModal('qr-modal')">
-    <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title" id="qr-title">Receive</span>
-        <button class="modal-close" onclick="closeModal('qr-modal')">×</button>
+  <!-- ── Create screen ── -->
+  <section id="screen-create" style="display:none">
+    <div class="panel">
+      <h1>New Wallet</h1>
+      <p>Set a password to encrypt and save your wallet locally</p>
+      <div class="field"><label>Password</label><input type="password" id="create-pw"  placeholder="Choose a strong password" /></div>
+      <div class="field"><label>Confirm password</label><input type="password" id="create-pw2" placeholder="Repeat password" /></div>
+      <div class="btn-group">
+        <button class="btn-primary"   onclick="createWallet()">Create &amp; Save</button>
+        <button class="btn-secondary" onclick="showScreen('welcome')">Back</button>
       </div>
-      <div class="qr-wrap">
-        <div id="qr-svg-wrap"></div>
-        <span class="qr-address" id="qr-address"></span>
-        <button class="qr-copy-btn" onclick="copyQRAddr()">Copy address</button>
+      <div id="create-err" class="msg error"></div>
+    </div>
+  </section>
+
+  <!-- ── Import screen ── -->
+  <section id="screen-import" style="display:none">
+    <div class="panel">
+      <h1>Import Wallet</h1>
+      <p>Restore from your seed phrase and protect it with a password</p>
+      <div class="field"><label>Secret Recovery Phrase</label><textarea id="import-seed" placeholder="Enter 12 or 24 word seed phrase…"></textarea></div>
+      <div class="field"><label>Password</label><input type="password" id="import-pw"  placeholder="Choose a strong password" /></div>
+      <div class="field"><label>Confirm password</label><input type="password" id="import-pw2" placeholder="Repeat password" /></div>
+      <div class="btn-group">
+        <button class="btn-primary"   onclick="importWallet()">Import &amp; Save</button>
+        <button class="btn-secondary" onclick="showScreen('welcome')">Back</button>
       </div>
+      <div id="import-err" class="msg error"></div>
+    </div>
+  </section>
+
+  <!-- ── Dashboard ── -->
+  <section id="dashboard">
+    <div class="dash-toolbar">
+      <button class="refresh-btn" id="refresh-btn" onclick="loadBalances()">
+        <span id="refresh-icon">↻</span> Refresh balances
+      </button>
+    </div>
+    <!-- Seed phrase reveal (only on create) -->
+    <div class="seed-box" id="seed-box">
+      <h3>⚠ Save Your Recovery Phrase</h3>
+      <p>Write these 12 words down in order. Anyone with this phrase can access your wallet.</p>
+      <div class="seed-grid" id="seed-grid"></div>
+      <button class="copy-seed-btn" onclick="copySeed()">Copy seed phrase</button>
+    </div>
+    <div class="accounts-grid" id="accounts-grid"></div>
+  </section>
+
+</main>
+
+<!-- Send modal -->
+<div class="modal-backdrop" id="send-modal" onclick="if(event.target===this)closeSend()">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="send-title">Send</span>
+      <button class="modal-close" onclick="closeSend()">×</button>
+    </div>
+
+    <!-- Step 1: form -->
+    <div class="send-step active" id="send-step1">
+      <div class="field"><label>Asset</label><select id="send-asset"></select></div>
+      <div class="field"><label>Recipient address</label><input id="send-to" type="text" placeholder="0x… / T… / bc1…" autocomplete="off" spellcheck="false" /></div>
+      <div class="field"><label id="send-amt-label">Amount</label><input id="send-amount" type="number" min="0" step="any" placeholder="0.00" /></div>
+      <button class="send-submit" onclick="getQuote()">Preview →</button>
+      <div class="modal-err" id="send-err1"></div>
+    </div>
+
+    <!-- Step 2: fee preview + confirm -->
+    <div class="send-step" id="send-step2">
+      <div class="fee-preview">
+        <div class="fee-row"><span class="fee-label">Sending</span><span id="prev-amount">—</span></div>
+        <div class="fee-row"><span class="fee-label">To</span><span id="prev-to" style="font-family:monospace;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;display:inline-block">—</span></div>
+        <div class="fee-row"><span class="fee-label">Network fee</span><span id="prev-fee">—</span></div>
+        <div class="fee-row"><span class="fee-label fee-total">Total cost</span><span class="fee-total" id="prev-total">—</span></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" style="flex:1;padding:10px" onclick="sendStep(1)">← Back</button>
+        <button class="send-submit" style="flex:2;margin-top:0" id="send-confirm-btn" onclick="submitSend()">Confirm &amp; Send</button>
+      </div>
+      <div class="modal-err" id="send-err2"></div>
+      <div class="tx-result" id="tx-result"><strong>Transaction sent ✓</strong><span id="tx-recipient"></span></div>
     </div>
   </div>
+</div>
 
-  <script>
-    let _addresses = {}
-    let _seedPhrase = ''
+<!-- QR modal -->
+<div class="modal-backdrop" id="qr-modal" onclick="if(event.target===this)closeModal('qr-modal')">
+  <div class="modal">
+    <div class="modal-hdr">
+      <span class="modal-title" id="qr-title">Receive</span>
+      <button class="modal-close" onclick="closeModal('qr-modal')">×</button>
+    </div>
+    <div class="qr-wrap">
+      <div id="qr-svg"></div>
+      <span class="qr-address" id="qr-addr"></span>
+      <button class="qr-copy" onclick="copyQR()">Copy address</button>
+    </div>
+  </div>
+</div>
 
-    function showLoader(msg = 'Working…') {
-      document.getElementById('loader-msg').textContent = msg
-      document.getElementById('loader').classList.add('active')
-    }
-    function hideLoader() {
-      document.getElementById('loader').classList.remove('active')
-    }
+<script>
+// ── Config (mirrors server) ───────────────────────────────────────────────────
+const CHAIN_META = [
+  { key: 'ethereum', name: 'Ethereum', icon: 'Ξ', cls: 'icon-eth', unit: 'ETH', dec: 18 },
+  { key: 'sepolia',  name: 'Sepolia',  icon: 'Ξ', cls: 'icon-sep', unit: 'ETH', dec: 18, testnet: true, sub: 'ERC-4337' },
+  { key: 'tron',     name: 'TRON',     icon: 'T', cls: 'icon-trx', unit: 'TRX', dec: 6  },
+  { key: 'bitcoin',  name: 'Bitcoin',  icon: '₿', cls: 'icon-btc', unit: 'sat', dec: 8  }
+]
+const CHAIN_TOKENS_UI = {
+  sepolia:  [{ address: '0xd077a400968890eacc75cdc901f0356c943e4fdb', symbol: 'USDT', decimals: 6 }],
+  ethereum: [{ address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', symbol: 'USDT', decimals: 6 }]
+}
+const EXPLORER = {
+  ethereum: h => `https://etherscan.io/tx/${h}`,
+  sepolia:  h => `https://sepolia.etherscan.io/tx/${h}`,
+  tron:     h => `https://tronscan.org/#/transaction/${h}`,
+  bitcoin:  h => `https://blockstream.info/tx/${h}`
+}
+const EXPLORER_ADDR = {
+  ethereum: a => `https://etherscan.io/address/${a}`,
+  sepolia:  a => `https://sepolia.etherscan.io/address/${a}`,
+  tron:     a => `https://tronscan.org/#/address/${a}`,
+  bitcoin:  a => `https://blockstream.info/address/${a}`
+}
 
-    function showStatus(msg, type = 'error') {
-      const el = document.getElementById('status')
-      el.textContent = msg
-      el.className = type
-      el.style.display = 'block'
-    }
-    function clearStatus() {
-      const el = document.getElementById('status')
-      el.style.display = 'none'
-    }
+// ── State ─────────────────────────────────────────────────────────────────────
+let _addresses = { 0: {}, 1: {} }
+let _seedPhrase = ''
 
-    function toggleImport() {
-      const panel = document.getElementById('import-panel')
-      panel.style.display = panel.style.display === 'block' ? 'none' : 'block'
-      clearStatus()
-    }
+// ── Loader ────────────────────────────────────────────────────────────────────
+function loader(msg = 'Working…') { document.getElementById('loader-msg').textContent = msg; document.getElementById('loader').classList.add('active') }
+function hideLoader() { document.getElementById('loader').classList.remove('active') }
 
-    async function createWallet() {
-      clearStatus()
-      showLoader('Generating wallet…')
-      try {
-        const res = await fetch('/api/create', { method: 'POST' })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
-        _seedPhrase = data.seedPhrase
-        _addresses = data.addresses
-        showDashboard(true)
-      } catch (e) {
-        showStatus(e.message)
-      } finally {
-        hideLoader()
+// ── Screen routing ────────────────────────────────────────────────────────────
+const SCREENS = ['unlock','welcome','create','import']
+function showScreen(name) {
+  SCREENS.forEach(s => document.getElementById(`screen-${s}`).style.display = 'none')
+  document.getElementById('dashboard').style.display = 'none'
+  if (name === 'dashboard') {
+    document.getElementById('dashboard').style.display = 'block'
+    document.getElementById('lock-btn').style.display = 'block'
+  } else {
+    document.getElementById('lock-btn').style.display = 'none'
+    if (name) document.getElementById(`screen-${name}`).style.display = 'block'
+  }
+}
+
+// ── Init: check for stored wallet ─────────────────────────────────────────────
+async function init() {
+  const { hasStoredWallet } = await fetch('/api/wallet/status').then(r => r.json())
+  showScreen(hasStoredWallet ? 'unlock' : 'welcome')
+}
+
+// ── Unlock ────────────────────────────────────────────────────────────────────
+async function unlockWallet() {
+  const pw  = document.getElementById('unlock-pw').value
+  const err = document.getElementById('unlock-err')
+  err.style.display = 'none'
+  if (!pw) { err.textContent = 'Enter your password'; err.style.display = 'block'; return }
+  loader('Unlocking wallet…')
+  try {
+    const res  = await fetch('/api/wallet/unlock', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error)
+    _addresses = data.addresses
+    openDashboard(false)
+  } catch (e) { err.textContent = e.message; err.style.display = 'block' }
+  finally { hideLoader() }
+}
+
+// ── Create ────────────────────────────────────────────────────────────────────
+async function createWallet() {
+  const pw  = document.getElementById('create-pw').value
+  const pw2 = document.getElementById('create-pw2').value
+  const err = document.getElementById('create-err')
+  err.style.display = 'none'
+  if (!pw)      { err.textContent = 'Enter a password'; err.style.display = 'block'; return }
+  if (pw !== pw2) { err.textContent = 'Passwords do not match'; err.style.display = 'block'; return }
+  loader('Creating wallet…')
+  try {
+    const res  = await fetch('/api/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error)
+    _seedPhrase = data.seedPhrase
+    _addresses  = data.addresses
+    openDashboard(true)
+  } catch (e) { err.textContent = e.message; err.style.display = 'block' }
+  finally { hideLoader() }
+}
+
+// ── Import ────────────────────────────────────────────────────────────────────
+async function importWallet() {
+  const phrase = document.getElementById('import-seed').value.trim()
+  const pw     = document.getElementById('import-pw').value
+  const pw2    = document.getElementById('import-pw2').value
+  const err    = document.getElementById('import-err')
+  err.style.display = 'none'
+  if (!phrase)    { err.textContent = 'Enter your seed phrase'; err.style.display = 'block'; return }
+  if (!pw)        { err.textContent = 'Enter a password'; err.style.display = 'block'; return }
+  if (pw !== pw2) { err.textContent = 'Passwords do not match'; err.style.display = 'block'; return }
+  loader('Importing wallet…')
+  try {
+    const res  = await fetch('/api/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seedPhrase: phrase, password: pw }) })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error)
+    _addresses = data.addresses
+    openDashboard(false)
+  } catch (e) { err.textContent = e.message; err.style.display = 'block' }
+  finally { hideLoader() }
+}
+
+// ── Lock ──────────────────────────────────────────────────────────────────────
+async function lockWallet() {
+  await fetch('/api/wallet', { method: 'DELETE' })
+  _addresses  = { 0: {}, 1: {} }
+  _seedPhrase = ''
+  showScreen('unlock')
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function openDashboard(isNew) {
+  if (isNew && _seedPhrase) {
+    const words = _seedPhrase.split(' ')
+    document.getElementById('seed-grid').innerHTML = words.map((w,i) =>
+      `<div class="seed-word"><span>${i+1}</span><span>${w}</span></div>`).join('')
+    document.getElementById('seed-box').style.display = 'block'
+  } else {
+    document.getElementById('seed-box').style.display = 'none'
+  }
+  renderAccountGrid()
+  showScreen('dashboard')
+  loadBalances()
+}
+
+function renderAccountGrid() {
+  const grid = document.getElementById('accounts-grid')
+  grid.innerHTML = [0, 1].map(idx => `
+    <div class="account-col" id="acol-${idx}">
+      <div class="account-header">
+        <span class="account-label">Account ${idx + 1}</span>
+        <span class="account-addr" id="acol-addr-${idx}"></span>
+      </div>
+      ${CHAIN_META.map(c => renderCard(idx, c)).join('')}
+    </div>`).join('')
+
+  // Populate addresses
+  for (const idx of [0, 1]) {
+    document.getElementById(`acol-addr-${idx}`).textContent = shortAddr(_addresses[idx]?.ethereum ?? '')
+    for (const c of CHAIN_META) {
+      document.getElementById(`addr-${idx}-${c.key}`).textContent = _addresses[idx]?.[c.key] ?? '—'
+    }
+  }
+}
+
+function renderCard(idx, c) {
+  return `
+  <div class="chain-card" id="card-${idx}-${c.key}">
+    <div class="chain-header">
+      <div class="chain-icon ${c.cls}">${c.icon}</div>
+      <div>
+        <div class="chain-name">${c.name}${c.testnet ? '<span class="testnet-badge">Testnet</span>' : ''}</div>
+        <div class="chain-sub">${c.sub ?? c.unit}</div>
+      </div>
+      <div class="chain-balance" id="bal-${idx}-${c.key}">
+        <div class="chain-balance-val">—</div>
+        <div class="chain-balance-unit">${c.unit}</div>
+      </div>
+    </div>
+    <div class="addr-row">
+      <span class="addr-text" id="addr-${idx}-${c.key}">—</span>
+      <button class="copy-btn" onclick="copyAddr(${idx},'${c.key}')" title="Copy">⎘</button>
+    </div>
+    <div class="token-list" id="tokens-${idx}-${c.key}"></div>
+    <div class="card-actions">
+      <button class="card-btn send-btn" onclick="openSend(${idx},'${c.key}')">↑ Send</button>
+      <button class="card-btn qr-btn"   onclick="openQR(${idx},'${c.key}')">⬛ Receive</button>
+      <button class="card-btn"          onclick="toggleHistory(${idx},'${c.key}',this)">☰ History</button>
+    </div>
+    <div class="history-section" id="hist-${idx}-${c.key}"></div>
+  </div>`
+}
+
+// ── Balances ──────────────────────────────────────────────────────────────────
+async function loadBalances() {
+  const btn  = document.getElementById('refresh-btn')
+  const icon = document.getElementById('refresh-icon')
+  btn.classList.add('loading'); icon.className = 'spin'
+  try {
+    const { balances, tokens } = await fetch('/api/balances').then(r => r.json())
+    for (const idx of [0, 1]) {
+      for (const c of CHAIN_META) {
+        setBalance(idx, c.key, balances[idx]?.[c.key], c.unit, c.dec)
+        if (tokens[idx]?.[c.key]) renderTokens(idx, c.key, tokens[idx][c.key])
       }
     }
+  } catch (e) { console.error('Balance error:', e.message) }
+  finally { btn.classList.remove('loading'); icon.className = ''; icon.textContent = '↻' }
+}
 
-    async function importWallet() {
-      const phrase = document.getElementById('seed-input').value.trim()
-      if (!phrase) return showStatus('Please enter your seed phrase.')
-      clearStatus()
-      showLoader('Importing wallet…')
-      try {
-        const res = await fetch('/api/import', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ seedPhrase: phrase })
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
-        _addresses = data.addresses
-        _seedPhrase = ''
-        showDashboard(false)
-      } catch (e) {
-        showStatus(e.message)
-      } finally {
-        hideLoader()
-      }
-    }
+function setBalance(idx, chain, raw, unit, dec) {
+  const el = document.getElementById(`bal-${idx}-${chain}`)
+  if (!el) return
+  el.querySelector('.chain-balance-val').textContent = raw ? fmtAmount(raw, dec) : '—'
+}
 
-    function showDashboard(isNew) {
-      document.getElementById('welcome').style.display = 'none'
-      document.getElementById('dashboard').style.display = 'block'
-      document.getElementById('disconnect-btn').style.display = 'block'
+function renderTokens(idx, chain, list) {
+  const el = document.getElementById(`tokens-${idx}-${chain}`)
+  if (!el) return
+  el.innerHTML = list.map(t =>
+    `<div class="token-row"><span class="token-symbol">${t.symbol}</span><span class="token-balance">${fmtAmount(t.balance, t.decimals)} ${t.symbol}</span></div>`
+  ).join('')
+}
 
-      // Addresses
-      document.getElementById('addr-ethereum').textContent = _addresses.ethereum || '—'
-      document.getElementById('addr-sepolia').textContent = _addresses.sepolia || '—'
-      document.getElementById('addr-tron').textContent = _addresses.tron || '—'
-      document.getElementById('addr-bitcoin').textContent = _addresses.bitcoin || '—'
-
-      // Seed phrase reveal
-      const seedReveal = document.getElementById('seed-reveal')
-      if (isNew && _seedPhrase) {
-        const words = _seedPhrase.split(' ')
-        const grid = document.getElementById('seed-grid')
-        grid.innerHTML = words.map((w, i) =>
-          `<div class="seed-word"><span>${i + 1}</span><span>${w}</span></div>`
-        ).join('')
-        seedReveal.style.display = 'block'
-      } else {
-        seedReveal.style.display = 'none'
-      }
-
-      loadBalances()
-    }
-
-    async function loadBalances() {
-      const btn = document.getElementById('refresh-btn')
-      const icon = document.getElementById('refresh-icon')
-      btn.classList.add('loading')
-      icon.className = 'spin'
-      icon.textContent = '↻'
-
-      try {
-        const res = await fetch('/api/balances')
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
-
-        const { balances, tokens } = data
-        setBalance('ethereum', balances.ethereum, 'ETH', 18)
-        setBalance('sepolia', balances.sepolia, 'ETH', 18)
-        setBalance('tron', balances.tron, 'TRX', 6)
-        setBalance('bitcoin', balances.bitcoin, 'sat', 0)
-
-        if (tokens) {
-          for (const [chain, list] of Object.entries(tokens)) {
-            renderTokens(chain, list)
-          }
-        }
-      } catch (e) {
-        console.error('Balance fetch error:', e.message)
-      } finally {
-        btn.classList.remove('loading')
-        icon.className = ''
-        icon.textContent = '↻'
-      }
-    }
-
-    function setBalance(chain, raw, unit, decimals) {
-      const el = document.getElementById(`bal-${chain}`)
-      if (!raw || raw === 'Error') {
-        el.innerHTML = `<div>—</div><div class="chain-balance-units">${unit}</div>`
-        return
-      }
-      let display = raw
-      if (decimals > 0) {
-        const n = BigInt(raw)
-        const d = BigInt(10 ** decimals)
-        const whole = n / d
-        const frac = ((n % d) * 10000n / d).toString().padStart(4, '0')
-        display = `${whole}.${frac}`
-      }
-      el.innerHTML = `<div>${display}</div><div class="chain-balance-units">${unit}</div>`
-    }
-
-    function renderTokens(chain, list) {
-      const el = document.getElementById(`tokens-${chain}`)
-      if (!el) return
-      el.innerHTML = list.map(t => {
-        const display = formatTokenBalance(t.balance, t.decimals)
-        return `<div class="token-row">
-        <span class="token-symbol">${t.symbol}</span>
-        <span class="token-balance">${display} ${t.symbol}</span>
+// ── History ───────────────────────────────────────────────────────────────────
+async function toggleHistory(idx, chain, btn) {
+  const el = document.getElementById(`hist-${idx}-${chain}`)
+  if (el.style.display === 'block') { el.style.display = 'none'; return }
+  el.style.display = 'block'
+  el.innerHTML = '<div class="hist-empty">Loading…</div>'
+  try {
+    const res  = await fetch(`/api/transfers/${chain}?accountIndex=${idx}`)
+    const data = await res.json()
+    if (data.unavailable) { el.innerHTML = '<div class="hist-empty">History not available for this chain</div>'; return }
+    if (data.error && !data.transfers?.length) { el.innerHTML = `<div class="hist-empty" style="color:#ff6b6b">Error: ${data.error}</div>`; return }
+    if (!data.transfers?.length) { el.innerHTML = '<div class="hist-empty">No transactions yet</div>'; return }
+    const meta = CHAIN_META.find(c => c.key === chain)
+    el.innerHTML = data.transfers.map(t => {
+      const isIn      = t.direction === 'incoming'
+      const short     = t.hash ? t.hash.slice(0,8)+'…'+t.hash.slice(-4) : '—'
+      const sub       = t.recipient ? shortAddr(t.recipient) : (t.height ? `Block ${t.height}` : '')
+      const explorerUrl = EXPLORER[chain]?.(t.hash)
+      const dispDec   = t.tokenDecimals != null ? t.tokenDecimals : meta.dec
+      const dispUnit  = t.tokenSymbol ?? meta.unit
+      return `<div class="history-item">
+        <span class="hist-dir">${isIn ? '↓' : '↑'}</span>
+        <div class="hist-body">
+          <div class="hist-val">${isIn ? '+' : '-'}${fmtAmount(t.value, dispDec)} ${dispUnit}</div>
+          ${sub ? `<div class="hist-sub">${isIn ? 'from' : 'to'} ${sub}</div>` : ''}
+        </div>
+        ${explorerUrl
+          ? `<a href="${explorerUrl}" target="_blank" class="hist-hash" style="color:var(--muted);text-decoration:none" title="${t.hash}">${short}</a>`
+          : `<span class="hist-hash" title="${t.hash}">${short}</span>`}
       </div>`
-      }).join('')
-    }
+    }).join('')
+  } catch (e) { el.innerHTML = `<div class="hist-empty">${e.message}</div>` }
+}
 
-    function formatTokenBalance(raw, decimals) {
-      if (!raw || raw === '0') return '0.00'
+// ── Send modal ────────────────────────────────────────────────────────────────
+let _sc = null  // { chain, accountIndex }
+
+function openSend(idx, chain) {
+  _sc = { chain, accountIndex: idx }
+  const meta   = CHAIN_META.find(c => c.key === chain)
+  const tokens = CHAIN_TOKENS_UI[chain] || []
+  document.getElementById('send-title').textContent   = `Send · ${meta.name}${meta.testnet ? ' (Sepolia)' : ''} · Acct ${idx+1}`
+  document.getElementById('send-asset').innerHTML     = `<option value="">Native · ${meta.unit}</option>` + tokens.map(t => `<option value="${t.address}">${t.symbol}</option>`).join('')
+  document.getElementById('send-amt-label').textContent = `Amount (${meta.unit})`
+  document.getElementById('send-asset').onchange = () => {
+    const tok = tokens.find(t => t.address === document.getElementById('send-asset').value)
+    document.getElementById('send-amt-label').textContent = `Amount (${tok ? tok.symbol : meta.unit})`
+  }
+  document.getElementById('send-to').value = ''
+  document.getElementById('send-amount').value = ''
+  document.getElementById('tx-result').style.display = 'none'
+  document.getElementById('send-err1').style.display = 'none'
+  document.getElementById('send-err2').style.display = 'none'
+  document.getElementById('send-confirm-btn').disabled = false
+  document.getElementById('send-confirm-btn').textContent = 'Confirm & Send'
+  sendStep(1)
+  document.getElementById('send-modal').classList.add('open')
+}
+
+function closeSend() {
+  document.getElementById('send-modal').classList.remove('open')
+  sendStep(1)
+}
+
+function sendStep(n) {
+  document.getElementById('send-step1').classList.toggle('active', n === 1)
+  document.getElementById('send-step2').classList.toggle('active', n === 2)
+}
+
+async function getQuote() {
+  const to     = document.getElementById('send-to').value.trim()
+  const amount = document.getElementById('send-amount').value.trim()
+  const token  = document.getElementById('send-asset').value || null
+  const err    = document.getElementById('send-err1')
+  err.style.display = 'none'
+  if (!to || !amount) { err.textContent = 'Fill in all fields'; err.style.display = 'block'; return }
+
+  const meta = CHAIN_META.find(c => c.key === _sc.chain)
+  const dec  = token ? (CHAIN_TOKENS_UI[_sc.chain]?.find(t => t.address === token)?.decimals ?? 18) : meta.dec
+  const sym  = token ? (CHAIN_TOKENS_UI[_sc.chain]?.find(t => t.address === token)?.symbol ?? '?') : meta.unit
+
+  document.querySelector('#send-step1 .send-submit').textContent = 'Estimating…'
+  document.querySelector('#send-step1 .send-submit').disabled    = true
+  try {
+    const res  = await fetch('/api/quote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chain: _sc.chain, to, amount, tokenAddress: token, accountIndex: _sc.accountIndex }) })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error)
+
+    const feeEth = fmtAmount(data.fee, meta.dec)
+    document.getElementById('prev-amount').textContent = `${amount} ${sym}`
+    document.getElementById('prev-to').textContent     = to
+    document.getElementById('prev-fee').textContent    = `~${feeEth} ${meta.unit}`
+    // total = amount + fee (only meaningful for native sends)
+    if (!token) {
       try {
-        const n = BigInt(raw)
-        const d = BigInt(10 ** decimals)
-        const whole = n / d
-        const frac = ((n % d) * 10000n / d).toString().padStart(4, '0')
-        return `${whole}.${frac.slice(0, 2)}`
-      } catch { return '—' }
+        const total = (BigInt(amount.replace('.','').padEnd(amount.indexOf('.') < 0 ? amount.length + meta.dec : amount.indexOf('.') + meta.dec + 1, '0').replace(/^0+/,'') || '0') + BigInt(data.fee)).toString()
+        document.getElementById('prev-total').textContent = `${fmtAmount(total, meta.dec)} ${meta.unit}`
+      } catch { document.getElementById('prev-total').textContent = '—' }
+    } else {
+      document.getElementById('prev-total').textContent = `${amount} ${sym} + ${feeEth} ${meta.unit}`
     }
+    sendStep(2)
+  } catch (e) { err.textContent = e.message; err.style.display = 'block' }
+  finally {
+    document.querySelector('#send-step1 .send-submit').textContent = 'Preview →'
+    document.querySelector('#send-step1 .send-submit').disabled    = false
+  }
+}
 
-    function copyAddr(chain) {
-      const addr = _addresses[chain]
-      if (addr) navigator.clipboard.writeText(addr).then(() => flash(`addr-${chain}`))
-    }
+async function submitSend() {
+  const to     = document.getElementById('send-to').value.trim()
+  const amount = document.getElementById('send-amount').value.trim()
+  const token  = document.getElementById('send-asset').value || null
+  const btn    = document.getElementById('send-confirm-btn')
+  const err    = document.getElementById('send-err2')
+  const result = document.getElementById('tx-result')
+  err.style.display = 'none'; result.style.display = 'none'
+  btn.disabled = true; btn.textContent = 'Sending…'
+  try {
+    const res  = await fetch('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chain: _sc.chain, to, amount, tokenAddress: token, accountIndex: _sc.accountIndex }) })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error)
+    const recipientUrl = EXPLORER_ADDR[_sc.chain]?.(to)
+    document.getElementById('tx-recipient').innerHTML = recipientUrl
+      ? ` <a href="${recipientUrl}" target="_blank" style="color:var(--blue);font-family:monospace;font-size:11px">${shortAddr(to)} ↗</a>`
+      : ` ${shortAddr(to)}`
+    result.style.display = 'block'
+    btn.textContent = 'Sent ✓'
+  } catch (e) { err.textContent = e.message; err.style.display = 'block'; btn.disabled = false; btn.textContent = 'Confirm & Send' }
+}
 
-    function copySeed() {
-      if (_seedPhrase) navigator.clipboard.writeText(_seedPhrase)
-    }
+// ── QR modal ──────────────────────────────────────────────────────────────────
+let _qrAddr = ''
 
-    function flash(id) {
-      const el = document.getElementById(id)
-      const orig = el.style.color
-      el.style.color = '#2196F3'
-      setTimeout(() => { el.style.color = orig }, 800)
-    }
+async function openQR(idx, chain) {
+  const meta = CHAIN_META.find(c => c.key === chain)
+  _qrAddr = _addresses[idx]?.[chain] ?? ''
+  document.getElementById('qr-title').textContent = `Receive · ${meta.name} · Acct ${idx+1}`
+  document.getElementById('qr-addr').textContent  = _qrAddr
+  document.getElementById('qr-svg').innerHTML     = '<div style="width:190px;height:190px;background:rgba(255,255,255,.05);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#555;font-size:13px">Loading…</div>'
+  document.getElementById('qr-modal').classList.add('open')
+  try {
+    const res = await fetch(`/api/qr?address=${encodeURIComponent(_qrAddr)}`)
+    if (!res.ok) throw new Error('Failed')
+    document.getElementById('qr-svg').innerHTML = await res.text()
+  } catch { document.getElementById('qr-svg').innerHTML = '<span style="color:#ff6b6b;font-size:13px">QR generation failed</span>' }
+}
 
-    // ── Token metadata (mirrors server CHAIN_TOKENS) ──
-    const CHAIN_TOKENS_UI = {
-      sepolia: [{ address: '0xd077a400968890eacc75cdc901f0356c943e4fdb', symbol: 'USDT', decimals: 6 }],
-      ethereum: [{ address: '0xdAC17F958D2ee523a2206206994597C13D831ec7', symbol: 'USDT', decimals: 6 }]
-    }
-    const NATIVE = { ethereum: { symbol: 'ETH', decimals: 18 }, sepolia: { symbol: 'ETH', decimals: 18 }, tron: { symbol: 'TRX', decimals: 6 }, bitcoin: { symbol: 'BTC', decimals: 8 } }
+function closeModal(id) { document.getElementById(id).classList.remove('open') }
+function copyQR() { if (_qrAddr) navigator.clipboard.writeText(_qrAddr) }
 
-    // ── Modal helpers ──
-    let _sendChain = null
+// ── Seed phrase ───────────────────────────────────────────────────────────────
+function copySeed() { if (_seedPhrase) navigator.clipboard.writeText(_seedPhrase) }
 
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('open')
-    }
+// ── Copy address ──────────────────────────────────────────────────────────────
+function copyAddr(idx, chain) {
+  const addr = _addresses[idx]?.[chain]
+  if (addr) navigator.clipboard.writeText(addr).then(() => flash(`addr-${idx}-${chain}`))
+}
 
-    // ── Send modal ──
-    function openSend(chain) {
-      _sendChain = chain
-      const native = NATIVE[chain]
-      const tokens = CHAIN_TOKENS_UI[chain] || []
+function flash(id) {
+  const el = document.getElementById(id); if (!el) return
+  const c = el.style.color; el.style.color = '#2196F3'; setTimeout(() => { el.style.color = c }, 700)
+}
 
-      const select = document.getElementById('send-asset')
-      select.innerHTML = `<option value="">Native · ${native.symbol}</option>` +
-        tokens.map(t => `<option value="${t.address}">${t.symbol}</option>`).join('')
+// ── Formatting ────────────────────────────────────────────────────────────────
+function fmtAmount(raw, dec) {
+  if (!raw || raw === '0') return '0'
+  try {
+    const n = BigInt(raw)
+    const d = 10n ** BigInt(dec)
+    const whole = n / d
+    const SHOW = Math.min(dec, 6)
+    const frac = ((n % d) * (10n ** BigInt(SHOW)) / d).toString().padStart(SHOW, '0')
+    const trimmed = frac.replace(/0+$/, '')
+    return trimmed ? `${whole}.${trimmed}` : `${whole}`
+  } catch { return raw }
+}
 
-      document.getElementById('send-amount-label').textContent = `Amount (${native.symbol})`
-      select.onchange = () => {
-        const tok = tokens.find(t => t.address === select.value)
-        document.getElementById('send-amount-label').textContent = `Amount (${tok ? tok.symbol : native.symbol})`
-      }
+function shortAddr(addr) {
+  if (!addr || addr.length < 10) return addr
+  return addr.slice(0, 6) + '…' + addr.slice(-4)
+}
 
-      document.getElementById('send-to').value = ''
-      document.getElementById('send-amount').value = ''
-      document.getElementById('send-error').style.display = 'none'
-      document.getElementById('tx-result').style.display = 'none'
-      document.getElementById('send-submit-btn').disabled = false
-      document.getElementById('send-modal').classList.add('open')
-    }
-
-    async function submitSend() {
-      const btn = document.getElementById('send-submit-btn')
-      const errEl = document.getElementById('send-error')
-      const resultEl = document.getElementById('tx-result')
-      errEl.style.display = 'none'
-      resultEl.style.display = 'none'
-
-      const to = document.getElementById('send-to').value.trim()
-      const amount = document.getElementById('send-amount').value.trim()
-      const tokenAddress = document.getElementById('send-asset').value || null
-
-      if (!to || !amount) {
-        errEl.textContent = 'Please fill in all fields.'
-        errEl.style.display = 'block'
-        return
-      }
-
-      btn.disabled = true
-      btn.textContent = 'Sending…'
-      try {
-        const res = await fetch('/api/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chain: _sendChain, to, amount, tokenAddress })
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error)
-        document.getElementById('tx-hash').textContent = data.hash
-        resultEl.style.display = 'block'
-        btn.textContent = 'Sent ✓'
-      } catch (e) {
-        errEl.textContent = e.message
-        errEl.style.display = 'block'
-        btn.disabled = false
-        btn.textContent = 'Send'
-      }
-    }
-
-    // ── QR / Receive modal ──
-    let _qrChain = null
-
-    async function openQR(chain) {
-      _qrChain = chain
-      const label = { ethereum: 'Ethereum', sepolia: 'Sepolia', tron: 'TRON', bitcoin: 'Bitcoin' }
-      document.getElementById('qr-title').textContent = `Receive · ${label[chain] ?? chain}`
-      document.getElementById('qr-address').textContent = _addresses[chain] || '—'
-      document.getElementById('qr-svg-wrap').innerHTML = '<div style="width:200px;height:200px;background:rgba(255,255,255,0.05);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#555">Loading…</div>'
-      document.getElementById('qr-modal').classList.add('open')
-
-      try {
-        const res = await fetch(`/api/qr?address=${encodeURIComponent(_addresses[chain])}`)
-        if (!res.ok) throw new Error('Failed to load QR')
-        const svg = await res.text()
-        document.getElementById('qr-svg-wrap').innerHTML = svg
-      } catch (e) {
-        document.getElementById('qr-svg-wrap').innerHTML = `<span style="color:#ff6b6b;font-size:13px">${e.message}</span>`
-      }
-    }
-
-    function copyQRAddr() {
-      const addr = _addresses[_qrChain]
-      if (addr) navigator.clipboard.writeText(addr)
-    }
-
-    async function disconnect() {
-      await fetch('/api/wallet', { method: 'DELETE' })
-      _addresses = {}
-      _seedPhrase = ''
-      document.getElementById('welcome').style.display = 'block'
-      document.getElementById('dashboard').style.display = 'none'
-      document.getElementById('disconnect-btn').style.display = 'none'
-      document.getElementById('import-panel').style.display = 'none'
-      document.getElementById('seed-input').value = ''
-        ;['ethereum', 'sepolia', 'tron', 'bitcoin'].forEach(c => {
-          document.getElementById(`bal-${c}`).innerHTML = '<div>—</div>'
-          document.getElementById(`addr-${c}`).textContent = '—'
-        })
-    }
-  </script>
-
+// ── Boot ──────────────────────────────────────────────────────────────────────
+init()
+</script>
 </body>
-
 </html>
