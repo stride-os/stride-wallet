@@ -2,6 +2,26 @@
 
 A self-custodial multi-chain wallet built on [Tether's Wallet Development Kit (WDK)](https://docs.wdk.tether.io). Runs as a local web app — no cloud, no custody, your keys never leave your machine.
 
+## 🚀 Features
+
+- **Multi-Chain Support**: Manage assets on Ethereum, Sepolia (Testnet), TRON, and Bitcoin.
+- **Smart Account Support**: Integrated ERC-4337 Smart Accounts on Sepolia using the Tether WDK.
+- **Interactive Web UI**: A sleek, glassmorphic dashboard for balance tracking and transfers.
+- **Secure Key Management**: Client-side seed phrase generation and import.
+- **Real-time Balances**: Instantly check native and token balances (including USDT).
+- **QR Code Integration**: Easily receive funds with generated QR codes for each chain.
+
+## 🛠️ Technology Stack
+
+- **Core**: Tether WDK (@tetherto/wdk)
+- **Blockchain Modules**: 
+  - EVM/Ethereum (@tetherto/wdk-wallet-evm)
+  - ERC-4337 (@tetherto/wdk-wallet-evm-erc-4337)
+  - TRON (@tetherto/wdk-wallet-tron)
+  - Bitcoin (@tetherto/wdk-wallet-btc)
+- **Backend**: Node.js, Express
+- **Frontend**: Vanilla HTML/JS/CSS (Modern Glassmorphism)
+
 ---
 
 ## Supported chains
